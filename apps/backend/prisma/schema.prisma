@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  githubId     String       @unique
+  username     String
+  email        String?
+  avatarUrl    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  vault        Vault?
+  repositories Repository[]
+
+  @@map("users")
+}
+
+model Vault {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  encryptedGeminiKey String   @db.Text
+  iv                 String
+  authTag            String
+  updatedAt          DateTime @updatedAt
+
+  @@map("vaults")
+}
+
+model Repository {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubRepoId BigInt
+  fullName     String
+  webhookId    String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  analysisJobs AnalysisJob[]
+
+  @@map("repositories")
+}
+
+enum EventType {
+  PULL_REQUEST
+  PUSH
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model AnalysisJob {
+  id           String     @id @default(uuid())
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  eventType    EventType
+  referenceId  String // PR number or Commit SHA
+  status       JobStatus  @default(QUEUED)
+  results      Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("analysis_jobs")
+}
