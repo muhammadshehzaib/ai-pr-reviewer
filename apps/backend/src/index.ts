@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import app from './app';
 import prisma from './config/prisma';
+// Pre-initialize our background tasks immediately on boot
+import './workers/analysis.worker'; 
 
 // Load ENV
 dotenv.config();
