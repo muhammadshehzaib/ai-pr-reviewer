@@ -5,6 +5,7 @@ import prisma from '../config/prisma';
 import { EncryptionService } from '../services/encryption.service';
 import { GitHubService } from '../services/github.service';
 import { AiProviderFactory } from '../services/ai/ai-factory';
+import { SocketService } from '../config/socket';
 
 export const analysisWorker = new Worker(
   ANALYSIS_QUEUE_NAME,
@@ -20,6 +21,8 @@ export const analysisWorker = new Worker(
         where: { id: jobId },
         data: { status: 'RUNNING' },
       });
+      
+      SocketService.emitStatus(jobId, '🚀 Worker Active: Analysis Cycle Commenced', 'RUNNING');
 
       // 2. Fetch User associated with Repository & retrieve their SECURE KEY
       const dbRepo = await prisma.repository.findUnique({
@@ -33,6 +36,7 @@ export const analysisWorker = new Worker(
 
       const vault = dbRepo.user.vault;
       console.log(`🔑 Vault Detected: Using user preference [${vault.provider}] engine.`);
+      SocketService.emitStatus(jobId, `🔐 Unlocking Security Vault [Provider: ${vault.provider}]`, 'RUNNING');
 
       // 3. DECRYPT THE KEY IN RAM TEMPORARILY
       const rawApiKey = EncryptionService.decrypt(
@@ -42,12 +46,11 @@ export const analysisWorker = new Worker(
       );
 
       // 4. BOOT CONNECTORS
-      // NOTE: In production, githubToken can either be a user's OAuth token stored in DB, or a GitHub App installation token.
-      // We assume a master server token or cached user token is available in process.env for this MVP skeleton.
       const githubToken = process.env.GITHUB_ACCESS_TOKEN || ''; 
       const ghService = new GitHubService(githubToken);
 
       // 5. FETCH THE GIT DIFF
+      SocketService.emitStatus(jobId, `📡 Fetching Raw Diff Stream from GitHub`, 'RUNNING');
       const { baseSha, headSha } = payloadSnapshot;
       const rawDiff = await ghService.fetchDiff(owner, repo, baseSha, headSha);
       
@@ -58,10 +61,13 @@ export const analysisWorker = new Worker(
 
       // 6. ENGAGE AI ENGINE VIA FACTORY
       console.log(`🧠 Contacting ${vault.provider} for Analysis Strategy...`);
+      SocketService.emitStatus(jobId, `🧠 AI Dispatching to ${vault.provider} Models`, 'RUNNING');
+      
       const aiDriver = AiProviderFactory.getProvider(vault.provider, rawApiKey);
       
       const suggestions = await aiDriver.analyzeCode(rawDiff);
       console.log(`🎯 AI Analysis Finished! Located ${suggestions.length} distinct findings.`);
+      SocketService.emitStatus(jobId, `🎯 Scan Complete: ${suggestions.length} items found`, 'RUNNING');
 
       // 7. POST SUGGESTIONS TO GITHUB & SAVE TO DB
       // Save full raw payload into the Job results JSON for the frontend
@@ -77,6 +83,7 @@ export const analysisWorker = new Worker(
       // Only possible to inline comment if it was an active Pull Request event
       if (eventType === 'PULL_REQUEST' && suggestions.length > 0) {
          console.log(`📬 Broadcasting inline review comments back to Pull Request #${referenceId}...`);
+         SocketService.emitStatus(jobId, `📬 Injecting Inline Comments onto GitHub PR`, 'RUNNING');
          const prNum = parseInt(referenceId, 10);
 
          for (const suggestion of suggestions) {
@@ -96,10 +103,13 @@ export const analysisWorker = new Worker(
       }
 
       console.log(`🏁 Job Cycle ${jobId} gracefully exited with 100% success.\n`);
+      SocketService.emitStatus(jobId, `✅ All Analysis Finalized. Results fully loaded.`, 'COMPLETED', { suggestions });
+      
       return { status: 'success', findingCount: suggestions.length };
 
     } catch (err) {
       console.error(`🚨 JOB FATALITY: ${jobId} died:`, err);
+      SocketService.emitStatus(jobId, `🚨 Fatal Error Encountered: ${(err as Error).message}`, 'FAILED');
       await prisma.analysisJob.update({
         where: { id: jobId },
         data: { status: 'FAILED' },
