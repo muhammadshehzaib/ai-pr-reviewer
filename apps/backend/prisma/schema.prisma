@@ -21,14 +21,22 @@ model User {
   @@map("users")
 }
 
+enum AiProvider {
+  GEMINI
+  OPENAI
+  CLAUDE
+  GROK
+}
+
 model Vault {
-  id                 String   @id @default(uuid())
-  userId             String   @unique
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  encryptedGeminiKey String   @db.Text
+  id                 String     @id @default(uuid())
+  userId             String     @unique
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider           AiProvider @default(GEMINI)
+  encryptedGeminiKey String     @db.Text // Keeping DB column name for back-compat or could rename to encryptedApiKey
   iv                 String
   authTag            String
-  updatedAt          DateTime @updatedAt
+  updatedAt          DateTime   @updatedAt
 
   @@map("vaults")
 }
