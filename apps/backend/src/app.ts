@@ -7,6 +7,7 @@ import webhookRoutes from './routes/webhook.routes';
 import authRoutes from './routes/auth.routes';
 import vaultRoutes from './routes/vault.routes';
 import repositoryRoutes from './routes/repository.routes';
+import jobRoutes from './routes/job.routes';
 
 const app: Application = express();
 
@@ -32,5 +33,6 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/repositories', repositoryRoutes);
+app.use('/api/jobs', jobRoutes);
 
 export default app;
