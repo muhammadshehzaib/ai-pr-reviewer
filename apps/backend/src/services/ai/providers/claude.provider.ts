@@ -1,0 +1,41 @@
+import Anthropic from '@anthropic-ai/sdk';
+import { BaseAiProvider, AiSuggestion } from './base.provider';
+
+const MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+
+export class ClaudeProvider extends BaseAiProvider {
+  private aiClient: Anthropic;
+
+  constructor(apiKey: string) {
+    super(apiKey);
+    this.aiClient = new Anthropic({ apiKey });
+  }
+
+  async analyzeCode(diff: string, customRules: string[] = []): Promise<AiSuggestion[]> {
+    try {
+      const systemPrompt = this.getSystemPrompt(customRules);
+
+      const response = await this.aiClient.messages.create({
+        model: MODEL,
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [
+          { role: 'user', content: `Here is the GIT DIFF to review:\n\n${diff}` },
+        ],
+      });
+
+      const textBlock = response.content.find((b) => b.type === 'text');
+      const raw = textBlock && 'text' in textBlock ? textBlock.text : '';
+
+      // Anthropic has no native JSON-mode toggle — strip stray code fences defensively.
+      const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      const result = Array.isArray(parsed) ? parsed : (Object.values(parsed)[0] as unknown);
+      return Array.isArray(result) ? (result as AiSuggestion[]) : [];
+    } catch (error) {
+      console.error('🔴 Claude Provider Error:', error);
+      throw new Error(`Claude API request failed: ${(error as Error).message}`);
+    }
+  }
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import io, { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Activity, CheckCircle2, AlertCircle, Cpu, ShieldAlert } from 'lucide-react';
 
@@ -13,13 +13,15 @@ interface ActivityLog {
   timestamp: Date;
 }
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+
 export default function DashboardPage() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [triggering, setTriggering] = useState(false);
 
   useEffect(() => {
-    // Hardcoded localhost connection for development demonstration
-    const socket = io('http://localhost:4000');
+    const socket = io(BACKEND_URL, { withCredentials: true });
 
     socket.on('connect', () => {
       setIsConnected(true);
@@ -28,7 +30,6 @@ export default function DashboardPage() {
 
     socket.on('disconnect', () => setIsConnected(false));
 
-    // Listening for universal dynamic stream
     socket.on('dashboard:activity', (data) => {
       const newEntry: ActivityLog = {
         id: Math.random().toString(36).substr(2, 9),
@@ -38,13 +39,40 @@ export default function DashboardPage() {
         timestamp: new Date(),
       };
 
-      setLogs((prev) => [newEntry, ...prev].slice(0, 10)); // Keep last 10 items
+      setLogs((prev) => [newEntry, ...prev].slice(0, 10));
     });
 
     return () => {
       socket.disconnect();
     };
   }, []);
+
+  async function initiateAudit() {
+    const repoId = window.prompt('Repository ID (from /api/repositories):');
+    if (!repoId) return;
+    const pullNumber = window.prompt('Pull request number to analyze:');
+    if (!pullNumber) return;
+
+    setTriggering(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/repositories/${repoId}/analyze`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pullNumber: Number(pullNumber) }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        alert(`Failed: ${body.error || res.statusText}`);
+        return;
+      }
+      console.log('✅ Audit queued:', body);
+    } catch (err) {
+      alert(`Network error: ${(err as Error).message}`);
+    } finally {
+      setTriggering(false);
+    }
+  }
 
   return (
     <div className="dashboard-grid">
@@ -135,7 +163,14 @@ export default function DashboardPage() {
               <AlertCircle size={32} color="var(--accent-purple)" style={{ marginBottom: '1rem' }} />
               <h4>Trigger Test Analysis</h4>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0.5rem 0 1.5rem' }}>Manually invoke the pipeline trigger for demonstration.</p>
-              <button className="btn-primary" style={{ width: '100%' }}>Initiate Audit</button>
+              <button
+                className="btn-primary"
+                style={{ width: '100%' }}
+                onClick={initiateAudit}
+                disabled={triggering}
+              >
+                {triggering ? 'Queuing…' : 'Initiate Audit'}
+              </button>
             </div>
           </div>
         </div>

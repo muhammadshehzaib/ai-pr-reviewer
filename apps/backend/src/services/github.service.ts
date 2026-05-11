@@ -13,19 +13,17 @@ export class GitHubService {
   async fetchDiff(owner: string, repo: string, base: string, head: string): Promise<string> {
     try {
       console.log(`📦 Fetching Diff: ${owner}/${repo} (Comparing ${base} -> ${head})`);
-      
-      // We fetch via the generic comparison endpoint
+
       const { data } = await this.octokit.repos.compareCommits({
         owner,
         repo,
         base,
         head,
         headers: {
-          accept: 'application/vnd.github.v3.diff', // CRITICAL: Forces text diff response!
+          accept: 'application/vnd.github.v3.diff',
         },
       });
 
-      // Because we changed headers to text/diff, octokit returns string
       return data as unknown as string;
     } catch (error) {
       console.error('🔴 GitHub Diff Fetch Failure:', error);
@@ -43,23 +41,68 @@ export class GitHubService {
     commitId: string,
     path: string,
     line: number,
-    body: string
+    body: string,
   ) {
     try {
       await this.octokit.pulls.createReviewComment({
         owner,
         repo,
         pull_number: pullNumber,
-        commit_id: commitId, // Ensure comment aligns mathematically with correct git hash
+        commit_id: commitId,
         path,
         line,
         body,
-        side: 'RIGHT', // Targets the 'New' changes side of the diff view
+        side: 'RIGHT',
       });
       console.log(`💬 Posted comment successfully to line ${line} of ${path}`);
     } catch (err) {
-      // Non-blocking fail: log, but don't crash the entire analysis fleet if one comment has bad coords.
       console.warn(`⚠️ Ignored failed comment injection to line ${line}:`, (err as Error).message);
     }
+  }
+
+  /**
+   * Registers a webhook on the repo pointing back at our ingestion endpoint.
+   * Returns the GitHub-assigned hook id (as a string) so we can later delete it.
+   */
+  async createWebhook(
+    owner: string,
+    repo: string,
+    webhookUrl: string,
+    secret: string | undefined,
+  ): Promise<string> {
+    const { data } = await this.octokit.repos.createWebhook({
+      owner,
+      repo,
+      events: ['pull_request', 'push'],
+      active: true,
+      config: {
+        url: webhookUrl,
+        content_type: 'json',
+        ...(secret ? { secret } : {}),
+        insecure_ssl: '0',
+      },
+    });
+    return String(data.id);
+  }
+
+  async deleteWebhook(owner: string, repo: string, hookId: number) {
+    await this.octokit.repos.deleteWebhook({ owner, repo, hook_id: hookId });
+  }
+
+  /**
+   * Looks up basic repo metadata (used to capture the numeric github repo id at registration time).
+   */
+  async getRepo(owner: string, repo: string) {
+    const { data } = await this.octokit.repos.get({ owner, repo });
+    return data;
+  }
+
+  /**
+   * Resolves the head SHA for a pull request — used by the manual-trigger flow,
+   * which doesn't have a webhook payload to read from.
+   */
+  async getPullRequest(owner: string, repo: string, pullNumber: number) {
+    const { data } = await this.octokit.pulls.get({ owner, repo, pull_number: pullNumber });
+    return data;
   }
 }
