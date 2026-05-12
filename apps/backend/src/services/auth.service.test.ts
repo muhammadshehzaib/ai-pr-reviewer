@@ -76,4 +76,65 @@ describe('AuthService', () => {
       expect(() => AuthService.verifyToken(noneToken)).toThrow();
     });
   });
+
+  describe('issueToken() — additional edge cases', () => {
+    it('includes an iat (issued-at) claim', () => {
+      const token = AuthService.issueToken(validPayload);
+      const decoded = jwt.decode(token) as Record<string, unknown>;
+      expect(decoded).toHaveProperty('iat');
+      expect(typeof decoded.iat).toBe('number');
+    });
+
+    it('exp is strictly greater than iat (positive lifetime)', () => {
+      const token = AuthService.issueToken(validPayload);
+      const decoded = jwt.decode(token) as { iat: number; exp: number };
+      expect(decoded.exp).toBeGreaterThan(decoded.iat);
+    });
+
+    it('does not embed the secret in the decoded payload', () => {
+      const token = AuthService.issueToken(validPayload);
+      const decoded = jwt.decode(token) as Record<string, unknown>;
+      const serialized = JSON.stringify(decoded);
+      expect(serialized).not.toContain(process.env.JWT_SECRET!);
+    });
+
+    it('two tokens issued back-to-back have identical core payload claims', () => {
+      const a = jwt.decode(AuthService.issueToken(validPayload)) as Record<string, unknown>;
+      const b = jwt.decode(AuthService.issueToken(validPayload)) as Record<string, unknown>;
+      expect(a.userId).toBe(b.userId);
+      expect(a.githubId).toBe(b.githubId);
+    });
+
+    it('uses HS256 algorithm in the header', () => {
+      const token = AuthService.issueToken(validPayload);
+      const header = JSON.parse(
+        Buffer.from(token.split('.')[0], 'base64url').toString('utf8'),
+      );
+      expect(header.alg).toBe('HS256');
+    });
+
+    it('round-trips additional string fields without dropping them', () => {
+      const payload = { userId: 'with-dashes-123', githubId: 'gh_456-XYZ' };
+      const decoded = AuthService.verifyToken(AuthService.issueToken(payload));
+      expect(decoded.userId).toBe(payload.userId);
+      expect(decoded.githubId).toBe(payload.githubId);
+    });
+  });
+
+  describe('verifyToken() — additional failure paths', () => {
+    it('throws on a malformed token with only two segments', () => {
+      expect(() => AuthService.verifyToken('aaa.bbb')).toThrow();
+    });
+
+    it('throws when payload base64 is corrupted', () => {
+      const token = AuthService.issueToken(validPayload);
+      const [header, , signature] = token.split('.');
+      const corrupted = `${header}.NOT_BASE64URL_!!!.${signature}`;
+      expect(() => AuthService.verifyToken(corrupted)).toThrow();
+    });
+
+    it('throws when given undefined (defensive)', () => {
+      expect(() => AuthService.verifyToken(undefined as unknown as string)).toThrow();
+    });
+  });
 });

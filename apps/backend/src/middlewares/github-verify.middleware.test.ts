@@ -115,4 +115,91 @@ describe('verifyGitHubWebhook middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
   });
+
+  describe('additional edge cases', () => {
+    it('accepts an array body with matching signature', () => {
+      const body = [{ a: 1 }, { b: 2 }];
+      const req = mockReq({
+        body,
+        headers: { 'x-hub-signature-256': sign(body) },
+      });
+      const res = mockRes();
+      const next = mockNext();
+
+      verifyGitHubWebhook(req, res, next);
+
+      expect(next).toHaveBeenCalledOnce();
+    });
+
+    it('accepts an empty object body with matching signature', () => {
+      const body = {};
+      const req = mockReq({
+        body,
+        headers: { 'x-hub-signature-256': sign(body) },
+      });
+      const res = mockRes();
+      const next = mockNext();
+
+      verifyGitHubWebhook(req, res, next);
+
+      expect(next).toHaveBeenCalledOnce();
+    });
+
+    it('returns 401 when signature uses sha1 prefix instead of sha256', () => {
+      const body = { x: 1 };
+      const sha1Like =
+        'sha1=' + createHmac('sha256', SECRET).update(JSON.stringify(body)).digest('hex');
+      const req = mockReq({ body, headers: { 'x-hub-signature-256': sha1Like } });
+      const res = mockRes();
+      const next = mockNext();
+
+      verifyGitHubWebhook(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('returns 401 when signature is missing the "sha256=" prefix', () => {
+      const body = { x: 1 };
+      const rawHex = createHmac('sha256', SECRET).update(JSON.stringify(body)).digest('hex');
+      const req = mockReq({ body, headers: { 'x-hub-signature-256': rawHex } });
+      const res = mockRes();
+      const next = mockNext();
+
+      verifyGitHubWebhook(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('returns 401 when the signature value is exactly empty string', () => {
+      const body = { x: 1 };
+      const req = mockReq({ body, headers: { 'x-hub-signature-256': '' } });
+      const res = mockRes();
+      const next = mockNext();
+
+      verifyGitHubWebhook(req, res, next);
+
+      // Empty string is falsy → "Missing signature".
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Forbidden: Missing signature' });
+    });
+
+    it('rejects signature for "key reorder" body if JSON.stringify byte representation differs', () => {
+      // JSON.stringify preserves insertion order, so {a:1,b:2} and {b:2,a:1} have different
+      // serializations — and the sender's signature must therefore match the wire bytes.
+      const sentBody = { a: 1, b: 2 };
+      const reorderedBody = { b: 2, a: 1 };
+      const req = mockReq({
+        body: reorderedBody,
+        headers: { 'x-hub-signature-256': sign(sentBody) },
+      });
+      const res = mockRes();
+      const next = mockNext();
+
+      verifyGitHubWebhook(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+    });
+  });
 });

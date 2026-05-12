@@ -122,4 +122,77 @@ describe('requireAuth middleware', () => {
       expect(next).not.toHaveBeenCalled();
     });
   });
+
+  describe('additional edge cases', () => {
+    it('returns 401 when cookies object is undefined entirely', () => {
+      const req = mockReq();
+      // explicitly clear cookies (mockReq sets {} by default)
+      (req as unknown as { cookies: undefined }).cookies = undefined;
+      const res = mockRes();
+      const next = mockNext();
+
+      requireAuth(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('rejects header that uses lowercase "bearer " prefix (case-sensitive)', () => {
+      const req = mockReq({ headers: { authorization: `bearer ${validToken}` } });
+      const res = mockRes();
+      const next = mockNext();
+
+      requireAuth(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the Bearer header when cookie token is an empty string', () => {
+      const req = mockReq({
+        cookies: { auth_token: '' },
+        headers: { authorization: `Bearer ${validToken}` },
+      });
+      const res = mockRes();
+      const next = mockNext();
+
+      requireAuth(req, res, next);
+
+      expect(next).toHaveBeenCalledOnce();
+      expect(req.auth?.userId).toBe('u-1');
+    });
+
+    it('does not set req.auth when authentication fails', () => {
+      const req = mockReq({ cookies: { auth_token: 'garbage' } });
+      const res = mockRes();
+      const next = mockNext();
+
+      requireAuth(req, res, next);
+
+      expect(req.auth).toBeUndefined();
+    });
+
+    it('returns 401 when only "Bearer" with no token follows', () => {
+      const req = mockReq({ headers: { authorization: 'Bearer ' } });
+      const res = mockRes();
+      const next = mockNext();
+
+      requireAuth(req, res, next);
+
+      // "Bearer ".slice(7) is "" → falsy → no token branch.
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized: missing credentials' });
+    });
+
+    it('returns 401 with the documented "invalid token" message on tampered token', () => {
+      const tampered = validToken.slice(0, -3) + 'AAA';
+      const req = mockReq({ cookies: { auth_token: tampered } });
+      const res = mockRes();
+      const next = mockNext();
+
+      requireAuth(req, res, next);
+
+      expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized: invalid token' });
+    });
+  });
 });

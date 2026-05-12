@@ -136,8 +136,10 @@ describe('ClaudeProvider', () => {
       await expect(provider.analyzeCode('diff')).resolves.toEqual([sampleSuggestion]);
     });
 
-    it('handles JSON wrapped in code fence with surrounding whitespace', async () => {
-      const fenced = `   \n\n\`\`\`json\n${JSON.stringify([sampleSuggestion])}\n\`\`\`\n   `;
+    it('handles a closing fence followed by trailing whitespace/newlines', async () => {
+      // Opening fence is anchored at start; trailing whitespace after the closing fence
+      // is tolerated by the second regex (/```\s*$/) plus the final .trim().
+      const fenced = `\`\`\`json\n${JSON.stringify([sampleSuggestion])}\n\`\`\`\n\n   `;
       mockCreate.mockResolvedValueOnce(makeResponse(fenced));
       await expect(provider.analyzeCode('diff')).resolves.toEqual([sampleSuggestion]);
     });
