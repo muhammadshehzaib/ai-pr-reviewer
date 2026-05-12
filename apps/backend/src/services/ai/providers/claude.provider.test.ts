@@ -1,0 +1,126 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const { mockCreate, AnthropicCtor } = vi.hoisted(() => {
+  const mockCreate = vi.fn();
+  const AnthropicCtor = vi.fn(function (this: any) {
+    this.messages = { create: mockCreate };
+  });
+  return { mockCreate, AnthropicCtor };
+});
+
+vi.mock('@anthropic-ai/sdk', () => ({ default: AnthropicCtor }));
+
+import { ClaudeProvider } from './claude.provider';
+
+const sampleSuggestion = {
+  filePath: 'src/foo.ts',
+  lineNumber: 10,
+  agentType: 'SECURITY',
+  issue: 'SQL injection risk',
+  suggestion: 'Use parameterized queries',
+  priority: 'HIGH',
+};
+
+function makeResponse(text: string) {
+  return { content: [{ type: 'text', text }] };
+}
+
+describe('ClaudeProvider', () => {
+  let provider: ClaudeProvider;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    provider = new ClaudeProvider('sk-ant-test');
+  });
+
+  describe('constructor', () => {
+    it('initializes the Anthropic client with the given API key', () => {
+      new ClaudeProvider('sk-ant-abc');
+      expect(AnthropicCtor).toHaveBeenCalledWith({ apiKey: 'sk-ant-abc' });
+    });
+  });
+
+  describe('analyzeCode() — happy path', () => {
+    it('parses a clean JSON array response', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse(JSON.stringify([sampleSuggestion])));
+
+      const out = await provider.analyzeCode('diff --git ...');
+
+      expect(out).toEqual([sampleSuggestion]);
+    });
+
+    it('returns an empty array when the model returns []', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse('[]'));
+      await expect(provider.analyzeCode('any diff')).resolves.toEqual([]);
+    });
+
+    it('passes the diff and the system prompt to Anthropic', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse('[]'));
+      await provider.analyzeCode('THE_DIFF_GOES_HERE');
+
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.system).toMatch(/world-class software security/i);
+      expect(call.messages[0].content).toContain('THE_DIFF_GOES_HERE');
+      expect(call.max_tokens).toBeGreaterThan(0);
+    });
+
+    it('injects custom rules into the system prompt', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse('[]'));
+      await provider.analyzeCode('diff', ['No console.log allowed', 'Prefer async/await']);
+
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.system).toContain('No console.log allowed');
+      expect(call.system).toContain('Prefer async/await');
+    });
+  });
+
+  describe('analyzeCode() — defensive parsing', () => {
+    it('strips ```json code fences before parsing', async () => {
+      const fenced = '```json\n' + JSON.stringify([sampleSuggestion]) + '\n```';
+      mockCreate.mockResolvedValueOnce(makeResponse(fenced));
+
+      const out = await provider.analyzeCode('diff');
+      expect(out).toEqual([sampleSuggestion]);
+    });
+
+    it('strips plain ``` code fences (no json tag)', async () => {
+      const fenced = '```\n' + JSON.stringify([sampleSuggestion]) + '\n```';
+      mockCreate.mockResolvedValueOnce(makeResponse(fenced));
+
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([sampleSuggestion]);
+    });
+
+    it('unwraps a single-key object wrapper like { "suggestions": [...] }', async () => {
+      mockCreate.mockResolvedValueOnce(
+        makeResponse(JSON.stringify({ suggestions: [sampleSuggestion] })),
+      );
+      const out = await provider.analyzeCode('diff');
+      expect(out).toEqual([sampleSuggestion]);
+    });
+
+    it('returns [] when the wrapper value is not an array', async () => {
+      mockCreate.mockResolvedValueOnce(
+        makeResponse(JSON.stringify({ note: 'no issues found' })),
+      );
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([]);
+    });
+  });
+
+  describe('analyzeCode() — failure paths', () => {
+    it('throws when the model returns invalid JSON', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse('this is not json at all'));
+      await expect(provider.analyzeCode('diff')).rejects.toThrow(/Claude API request failed/);
+    });
+
+    it('throws when the Anthropic SDK rejects (e.g., 401)', async () => {
+      mockCreate.mockRejectedValueOnce(new Error('401 invalid x-api-key'));
+      await expect(provider.analyzeCode('diff')).rejects.toThrow(/Claude API request failed/);
+    });
+
+    it('throws when the response has no text block at all', async () => {
+      // .find(b => b.type === 'text') returns undefined -> raw becomes '' -> JSON.parse('') throws.
+      mockCreate.mockResolvedValueOnce({ content: [{ type: 'tool_use' }] });
+      await expect(provider.analyzeCode('diff')).rejects.toThrow(/Claude API request failed/);
+    });
+  });
+});

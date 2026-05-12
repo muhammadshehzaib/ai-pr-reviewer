@@ -32,9 +32,9 @@ export class GeminiProvider extends BaseAiProvider {
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
 
-      // Safely parse the forced JSON output
-      const suggestions: AiSuggestion[] = JSON.parse(responseText);
-      return suggestions;
+      const rawData = JSON.parse(responseText);
+      const normalized = Array.isArray(rawData) ? rawData : Object.values(rawData)[0];
+      return Array.isArray(normalized) ? (normalized as AiSuggestion[]) : [];
       
     } catch (error) {
       console.error('🔴 Gemini Provider Error:', error);
