@@ -98,4 +98,74 @@ describe('GeminiProvider', () => {
       await expect(provider.analyzeCode('diff')).resolves.toEqual([]);
     });
   });
+
+  describe('analyzeCode() — additional edge cases', () => {
+    it('omits the custom-rules block from the system prompt when no rules are passed', async () => {
+      mockGenerateContent.mockResolvedValueOnce(geminiResponse('[]'));
+      await provider.analyzeCode('diff');
+
+      const promptArg = mockGenerateContent.mock.calls[0][0] as string;
+      expect(promptArg).not.toContain('ADDITIONAL USER RULES TO ENFORCE');
+    });
+
+    it('includes the ADDITIONAL USER RULES block when rules are passed', async () => {
+      mockGenerateContent.mockResolvedValueOnce(geminiResponse('[]'));
+      await provider.analyzeCode('diff', ['Disallow `any`']);
+
+      const promptArg = mockGenerateContent.mock.calls[0][0] as string;
+      expect(promptArg).toContain('ADDITIONAL USER RULES TO ENFORCE');
+      expect(promptArg).toContain('Disallow `any`');
+    });
+
+    it('joins multiple custom rules with newlines', async () => {
+      mockGenerateContent.mockResolvedValueOnce(geminiResponse('[]'));
+      await provider.analyzeCode('diff', ['RULE_ONE', 'RULE_TWO', 'RULE_THREE']);
+
+      const promptArg = mockGenerateContent.mock.calls[0][0] as string;
+      expect(promptArg).toMatch(/RULE_ONE[\s\S]*RULE_TWO[\s\S]*RULE_THREE/);
+    });
+
+    it('handles a very large diff without truncation in the prompt', async () => {
+      mockGenerateContent.mockResolvedValueOnce(geminiResponse('[]'));
+      const bigDiff = 'X'.repeat(200_000);
+      await provider.analyzeCode(bigDiff);
+
+      const promptArg = mockGenerateContent.mock.calls[0][0] as string;
+      expect(promptArg).toContain(bigDiff);
+    });
+
+    it('returns [] when model returns an empty single-key object wrapper with []', async () => {
+      mockGenerateContent.mockResolvedValueOnce(
+        geminiResponse(JSON.stringify({ suggestions: [] })),
+      );
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([]);
+    });
+
+    it('throws when response.text() throws', async () => {
+      mockGenerateContent.mockResolvedValueOnce({
+        response: {
+          text: () => {
+            throw new Error('blocked by safety filter');
+          },
+        },
+      });
+      await expect(provider.analyzeCode('diff')).rejects.toThrow(
+        /Gemini API request failed.*safety/i,
+      );
+    });
+
+    it('surfaces the underlying error message in the thrown error', async () => {
+      mockGenerateContent.mockRejectedValueOnce(new Error('PERMISSION_DENIED'));
+      await expect(provider.analyzeCode('diff')).rejects.toThrow(/PERMISSION_DENIED/);
+    });
+
+    it('logs the error to console.error before re-throwing', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockGenerateContent.mockRejectedValueOnce(new Error('boom'));
+
+      await expect(provider.analyzeCode('diff')).rejects.toThrow();
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+  });
 });

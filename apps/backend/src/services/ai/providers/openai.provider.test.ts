@@ -107,4 +107,58 @@ describe('OpenAiProvider', () => {
       await expect(provider.analyzeCode('diff')).rejects.toThrow(/OpenAI Request Failed/);
     });
   });
+
+  describe('analyzeCode() — additional edge cases', () => {
+    it('returns [] when content is the literal string "{}"', async () => {
+      mockCreate.mockResolvedValueOnce(chatResponse('{}'));
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([]);
+    });
+
+    it('takes only the first choice when multiple are returned', async () => {
+      mockCreate.mockResolvedValueOnce({
+        choices: [
+          { message: { content: JSON.stringify([sample]) } },
+          { message: { content: JSON.stringify([{ ...sample, issue: 'ignored' }]) } },
+        ],
+      });
+      const out = await provider.analyzeCode('diff');
+      expect(out).toEqual([sample]);
+    });
+
+    it('preserves order of suggestions in the array', async () => {
+      const s2 = { ...sample, lineNumber: 99, issue: 'Other' };
+      mockCreate.mockResolvedValueOnce(chatResponse(JSON.stringify([sample, s2])));
+      const out = await provider.analyzeCode('diff');
+      expect(out).toEqual([sample, s2]);
+    });
+
+    it('omits ADDITIONAL USER RULES section when no rules are passed', async () => {
+      mockCreate.mockResolvedValueOnce(chatResponse('[]'));
+      await provider.analyzeCode('diff');
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.messages[0].content).not.toContain('ADDITIONAL USER RULES TO ENFORCE');
+    });
+
+    it('emits exactly two messages (system + user) — no chat history', async () => {
+      mockCreate.mockResolvedValueOnce(chatResponse('[]'));
+      await provider.analyzeCode('diff');
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.messages).toHaveLength(2);
+    });
+
+    it('logs to console.error on failure', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockCreate.mockRejectedValueOnce(new Error('boom'));
+      await expect(provider.analyzeCode('diff')).rejects.toThrow();
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('handles an empty diff string', async () => {
+      mockCreate.mockResolvedValueOnce(chatResponse('[]'));
+      await expect(provider.analyzeCode('')).resolves.toEqual([]);
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.messages[1].content).toContain('Here is the code diff:');
+    });
+  });
 });

@@ -123,4 +123,69 @@ describe('ClaudeProvider', () => {
       await expect(provider.analyzeCode('diff')).rejects.toThrow(/Claude API request failed/);
     });
   });
+
+  describe('analyzeCode() — additional edge cases', () => {
+    it('picks the FIRST text block when the response has multiple content blocks', async () => {
+      mockCreate.mockResolvedValueOnce({
+        content: [
+          { type: 'tool_use' },
+          { type: 'text', text: JSON.stringify([sampleSuggestion]) },
+          { type: 'text', text: 'IGNORED' },
+        ],
+      });
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([sampleSuggestion]);
+    });
+
+    it('handles JSON wrapped in code fence with surrounding whitespace', async () => {
+      const fenced = `   \n\n\`\`\`json\n${JSON.stringify([sampleSuggestion])}\n\`\`\`\n   `;
+      mockCreate.mockResolvedValueOnce(makeResponse(fenced));
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([sampleSuggestion]);
+    });
+
+    it('uses model name from CLAUDE_MODEL env (or a sane default starting with "claude")', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse('[]'));
+      await provider.analyzeCode('diff');
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.model).toMatch(/^claude/);
+    });
+
+    it('sends a single user message (no chat history)', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse('[]'));
+      await provider.analyzeCode('diff');
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.messages).toHaveLength(1);
+      expect(call.messages[0].role).toBe('user');
+    });
+
+    it('does not include custom-rules section when rules array is empty', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse('[]'));
+      await provider.analyzeCode('diff', []);
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.system).not.toContain('ADDITIONAL USER RULES TO ENFORCE');
+    });
+
+    it('returns the LAST single-key wrapper value when first key holds an array (Object.values order)', async () => {
+      // Object.values respects insertion order; the implementation uses [0].
+      // This locks in the current contract: only the first key matters.
+      mockCreate.mockResolvedValueOnce(
+        makeResponse(JSON.stringify({ suggestions: [sampleSuggestion], meta: 'unused' })),
+      );
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([sampleSuggestion]);
+    });
+
+    it('logs to console.error on failure', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockCreate.mockRejectedValueOnce(new Error('boom'));
+      await expect(provider.analyzeCode('diff')).rejects.toThrow();
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('passes max_tokens=4096 to bound runaway responses', async () => {
+      mockCreate.mockResolvedValueOnce(makeResponse('[]'));
+      await provider.analyzeCode('diff');
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.max_tokens).toBe(4096);
+    });
+  });
 });

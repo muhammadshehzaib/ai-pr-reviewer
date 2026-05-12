@@ -108,4 +108,45 @@ describe('GrokProvider', () => {
       await expect(provider.analyzeCode('diff')).rejects.toThrow(/Grok API request failed/);
     });
   });
+
+  describe('analyzeCode() — additional edge cases', () => {
+    it('returns [] when content is null (falls back to "{}")', async () => {
+      mockCreate.mockResolvedValueOnce({ choices: [{ message: { content: null } }] });
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([]);
+    });
+
+    it('does NOT use the default OpenAI base URL (must point to xAI)', () => {
+      new GrokProvider('xai-123');
+      const opts = OpenAICtor.mock.calls.at(-1)?.[0] as any;
+      expect(opts.baseURL).not.toBe(undefined);
+      expect(opts.baseURL).not.toMatch(/openai/i);
+    });
+
+    it('sends system + user messages in that order', async () => {
+      mockCreate.mockResolvedValueOnce(chatResponse('[]'));
+      await provider.analyzeCode('diff');
+      const call = mockCreate.mock.calls[0][0];
+      expect(call.messages[0].role).toBe('system');
+      expect(call.messages[1].role).toBe('user');
+    });
+
+    it('logs to console.error on failure', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockCreate.mockRejectedValueOnce(new Error('upstream gone'));
+      await expect(provider.analyzeCode('diff')).rejects.toThrow();
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('preserves multiple suggestions in returned array', async () => {
+      const s2 = { ...sample, lineNumber: 88, issue: 'Other' };
+      mockCreate.mockResolvedValueOnce(chatResponse(JSON.stringify([sample, s2])));
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([sample, s2]);
+    });
+
+    it('handles a JSON wrapper whose only value is an empty array', async () => {
+      mockCreate.mockResolvedValueOnce(chatResponse(JSON.stringify({ findings: [] })));
+      await expect(provider.analyzeCode('diff')).resolves.toEqual([]);
+    });
+  });
 });
