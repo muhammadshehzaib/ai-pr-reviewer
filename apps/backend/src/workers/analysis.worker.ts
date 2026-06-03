@@ -42,7 +42,8 @@ export const analysisWorker = new Worker(
       const rawApiKey = EncryptionService.decrypt(
         vault.encryptedGeminiKey,
         vault.iv,
-        vault.authTag
+        vault.authTag,
+        vault.salt
       );
 
       // 4. BOOT CONNECTORS

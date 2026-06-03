@@ -36,6 +36,7 @@ model Vault {
   encryptedGeminiKey String     @db.Text // Keeping DB column name for back-compat or could rename to encryptedApiKey
   iv                 String
   authTag            String
+  salt               String     // per-record salt for scrypt key derivation
   updatedAt          DateTime   @updatedAt
 
   @@map("vaults")

@@ -30,7 +30,7 @@ export class VaultController {
       return res.status(400).json({ error: 'provider must be one of GEMINI, OPENAI, CLAUDE, GROK' });
     }
 
-    const { encryptedData, iv, authTag } = EncryptionService.encrypt(apiKey);
+    const { encryptedData, iv, authTag, salt } = EncryptionService.encrypt(apiKey);
 
     const vault = await prisma.vault.upsert({
       where: { userId: req.auth!.userId },
@@ -40,12 +40,14 @@ export class VaultController {
         encryptedGeminiKey: encryptedData,
         iv,
         authTag,
+        salt,
       },
       update: {
         provider,
         encryptedGeminiKey: encryptedData,
         iv,
         authTag,
+        salt,
       },
       select: { provider: true, updatedAt: true },
     });
