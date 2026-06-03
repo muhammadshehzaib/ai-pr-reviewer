@@ -4,6 +4,28 @@ An AI-powered GitHub Pull Request reviewer. Connect a repo, drop in an AI API ke
 
 Supports **OpenAI**, **Google Gemini**, **Anthropic Claude**, and **xAI Grok** out of the box.
 
+<p align="center">
+  <a href="https://REPLACE-WITH-YOUR-VPS-URL"><img src="https://img.shields.io/badge/Live%20Demo-Visit-2ea44f?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"></a>
+  <a href="https://github.com/muhammadshehzaib/ai-pr-reviewer"><img src="https://img.shields.io/badge/Source-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js%2016-000000?logo=nextdotjs&logoColor=white" alt="Next.js 16">
+  <img src="https://img.shields.io/badge/Express%205-000000?logo=express&logoColor=white" alt="Express 5">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white" alt="Prisma">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white" alt="Redis">
+  <img src="https://img.shields.io/badge/Socket.IO-010101?logo=socketdotio&logoColor=white" alt="Socket.IO">
+</p>
+
+> 📸 **Add a screenshot of the live dashboard / an example PR review here.** Drop an image at `docs/screenshot.png` and uncomment the block below.
+<!--
+<p align="center">
+  <img src="docs/screenshot.png" alt="AI PR Reviewer dashboard" width="850">
+</p>
+-->
+
 ---
 
 ## Features
@@ -65,7 +87,7 @@ Supports **OpenAI**, **Google Gemini**, **Anthropic Claude**, and **xAI Grok** o
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/muhammadshehzaib/ai-pr-reviewer.git
 cd ai-pr-reviewer
 npm install
 ```
