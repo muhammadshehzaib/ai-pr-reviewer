@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Cpu, Github, ShieldCheck, Activity, Key } from 'lucide-react';
+import { Cpu, GitBranch, ShieldCheck, Activity, Key } from 'lucide-react';
 import { BACKEND_URL } from '../lib/api';
 import { useAuth } from '../lib/useAuth';
 
@@ -33,7 +33,7 @@ export default function HomePage() {
         </p>
 
         <a href={`${BACKEND_URL}/api/auth/github`} className="btn-primary" style={{ fontSize: '1rem' }}>
-          <Github size={20} /> Continue with GitHub
+          <GitBranch size={20} /> Continue with GitHub
         </a>
 
         <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
