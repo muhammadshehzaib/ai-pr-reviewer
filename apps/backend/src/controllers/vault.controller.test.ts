@@ -36,6 +36,7 @@ beforeEach(() => {
     encryptedData: 'ENC',
     iv: 'IV',
     authTag: 'TAG',
+    salt: 'SALT',
   });
 });
 
@@ -85,6 +86,7 @@ describe('VaultController.upsertVault — happy path', () => {
           encryptedGeminiKey: 'ENC',
           iv: 'IV',
           authTag: 'TAG',
+          salt: 'SALT',
         }),
       }),
     );

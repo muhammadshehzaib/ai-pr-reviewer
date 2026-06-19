@@ -6,8 +6,15 @@ export const verifyGitHubWebhook = (req: Request, res: Response, next: NextFunct
   const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
-    // In early development, you can skip validation by not setting this ENV
-    console.warn('⚠️ WARN: GITHUB_WEBHOOK_SECRET not set. Skipping validation.');
+    // Fail CLOSED in production: an unset secret must never mean "accept everything".
+    if (process.env.NODE_ENV === 'production') {
+      console.error(
+        '🛑 GITHUB_WEBHOOK_SECRET is not set in production. Rejecting webhook — refusing to run unverified.',
+      );
+      return res.status(500).json({ message: 'Webhook verification not configured' });
+    }
+    // Outside production only, allow an explicit dev bypass — loudly.
+    console.warn('⚠️ WARN: GITHUB_WEBHOOK_SECRET not set (non-production). Skipping validation.');
     return next();
   }
 

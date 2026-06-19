@@ -15,14 +15,18 @@ function sign(body: unknown, secret = SECRET): string {
 describe('verifyGitHubWebhook middleware', () => {
   const originalSecret = process.env.GITHUB_WEBHOOK_SECRET;
 
+  const originalNodeEnv = process.env.NODE_ENV;
+
   beforeEach(() => {
     process.env.GITHUB_WEBHOOK_SECRET = SECRET;
-    // Silence the "skipping validation" warn in the no-secret test
+    // Silence the "skipping validation" warn/error in the no-secret tests
     vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     process.env.GITHUB_WEBHOOK_SECRET = originalSecret;
+    process.env.NODE_ENV = originalNodeEnv;
     vi.restoreAllMocks();
   });
 
@@ -42,8 +46,9 @@ describe('verifyGitHubWebhook middleware', () => {
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it('skips validation and calls next() when no secret is configured', () => {
+    it('skips validation and calls next() when no secret is configured (non-production only)', () => {
       delete process.env.GITHUB_WEBHOOK_SECRET;
+      process.env.NODE_ENV = 'development';
 
       const req = mockReq({ body: { foo: 'bar' } });
       const res = mockRes();
@@ -53,6 +58,20 @@ describe('verifyGitHubWebhook middleware', () => {
 
       expect(next).toHaveBeenCalledOnce();
       expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it('fails CLOSED (500) when no secret is configured in production', () => {
+      delete process.env.GITHUB_WEBHOOK_SECRET;
+      process.env.NODE_ENV = 'production';
+
+      const req = mockReq({ body: { foo: 'bar' } });
+      const res = mockRes();
+      const next = mockNext();
+
+      verifyGitHubWebhook(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
