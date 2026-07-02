@@ -43,15 +43,16 @@ model Vault {
 }
 
 model Repository {
-  id           String        @id @default(uuid())
-  userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  githubRepoId BigInt
-  fullName     String
-  webhookId    String?
-  isActive     Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  analysisJobs AnalysisJob[]
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubRepoId   BigInt
+  fullName       String
+  webhookId      String?
+  isActive       Boolean       @default(true)
+  lastScannedSha String? // default-branch head last seen by the repo poller (webhook-less repos)
+  createdAt      DateTime      @default(now())
+  analysisJobs   AnalysisJob[]
 
   @@map("repositories")
 }

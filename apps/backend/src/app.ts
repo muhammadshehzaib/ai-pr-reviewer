@@ -19,7 +19,16 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json());
+app.use(
+  express.json({
+    // Keep the exact wire bytes: GitHub signs the raw payload, and a
+    // parse→stringify round-trip is not byte-stable (unicode escapes, key
+    // order), so webhook HMAC verification must run against these bytes.
+    verify: (req, _res, buf) => {
+      (req as Request).rawBody = buf;
+    },
+  }),
+);
 app.use(cookieParser());
 app.use(morgan('dev'));
 

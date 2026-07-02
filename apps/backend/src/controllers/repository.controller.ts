@@ -33,7 +33,7 @@ export class RepositoryController {
     const existing = await prisma.repository.findFirst({
       where: { userId: req.auth!.userId, fullName },
     });
-    if (existing) {
+    if (existing?.isActive) {
       return res.status(409).json({ error: 'Repository already registered' });
     }
 
@@ -41,25 +41,49 @@ export class RepositoryController {
       const gh = getBotGitHub();
       const ghRepo = await gh.getRepo(owner, repo);
       const webhookUrl = `${BACKEND_URL}/api/webhooks/github`;
-      const hookId = await gh.createWebhook(
-        owner,
-        repo,
-        webhookUrl,
-        process.env.GITHUB_WEBHOOK_SECRET,
-      );
 
-      const dbRepo = await prisma.repository.create({
-        data: {
-          userId: req.auth!.userId,
-          githubRepoId: BigInt(ghRepo.id),
-          fullName,
-          webhookId: hookId,
-          isActive: true,
-        },
-      });
+      // GitHub refuses webhook URLs that aren't publicly reachable (e.g.
+      // localhost in local dev). Manual audits don't need the webhook, so
+      // connect the repo anyway and surface a warning instead of failing.
+      let hookId: string | null = null;
+      try {
+        hookId = await gh.createWebhook(owner, repo, webhookUrl, process.env.GITHUB_WEBHOOK_SECRET);
+      } catch (hookErr) {
+        const msg = (hookErr as Error).message || '';
+        const unreachableUrl =
+          /isn't reachable over the public internet/i.test(msg) || webhookUrl.includes('localhost');
+        if (!unreachableUrl) throw hookErr;
+        console.warn(
+          `⚠️ Webhook not installed for ${fullName} (${msg}). Connected for manual audits only.`,
+        );
+      }
 
-      return res.status(201).json({
+      // Disconnect soft-deletes (isActive: false, webhookId: null), so an
+      // existing inactive row is reactivated with the fresh webhook rather
+      // than treated as a duplicate.
+      const dbRepo = existing
+        ? await prisma.repository.update({
+            where: { id: existing.id },
+            data: { githubRepoId: BigInt(ghRepo.id), webhookId: hookId, isActive: true },
+          })
+        : await prisma.repository.create({
+            data: {
+              userId: req.auth!.userId,
+              githubRepoId: BigInt(ghRepo.id),
+              fullName,
+              webhookId: hookId,
+              isActive: true,
+            },
+          });
+
+      return res.status(existing ? 200 : 201).json({
         repository: { ...dbRepo, githubRepoId: dbRepo.githubRepoId.toString() },
+        ...(hookId
+          ? {}
+          : {
+              warning:
+                'Webhook not installed: the backend URL is not reachable from GitHub. Use the Audit button to run reviews manually.',
+            }),
       });
     } catch (err) {
       console.error('🔴 Repo registration failure:', err);
@@ -144,6 +168,7 @@ export class RepositoryController {
     await analysisQueue.add(`manual-${eventType}-${referenceId}`, {
       jobId: job.id,
       repositoryId: repo.id,
+      userId: repo.userId,
       fullName: repo.fullName,
       eventType,
       referenceId,

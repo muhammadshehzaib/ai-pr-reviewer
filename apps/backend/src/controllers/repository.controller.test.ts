@@ -131,6 +131,70 @@ describe('RepositoryController.register — happy path', () => {
     const out = res.json.mock.calls[0][0];
     expect(out.repository.githubRepoId).toBe('99');
   });
+
+  it('still connects the repo (webhookId null + warning) when GitHub rejects a non-public webhook URL', async () => {
+    mockRepoFindFirst.mockResolvedValueOnce(null);
+    mockGetRepo.mockResolvedValueOnce({ id: 99 });
+    mockCreateWebhook.mockRejectedValueOnce(
+      new Error(
+        `Validation Failed: {"resource":"Hook","code":"custom","field":"url","message":"url is not supported because it isn't reachable over the public Internet (localhost)"}`,
+      ),
+    );
+    mockRepoCreate.mockResolvedValueOnce({
+      id: 'r-new',
+      fullName: 'octo/cat',
+      githubRepoId: BigInt(99),
+      webhookId: null,
+      isActive: true,
+    });
+
+    const req = authedReq({ body: { fullName: 'octo/cat' } });
+    const res = mockRes();
+
+    await RepositoryController.register(req, res);
+
+    expect(mockRepoCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ webhookId: null, isActive: true }),
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
+    const out = res.json.mock.calls[0][0];
+    expect(out.repository.webhookId).toBeNull();
+    expect(out.warning).toMatch(/not reachable from GitHub/);
+  });
+
+  it('reactivates a previously disconnected repo with a fresh webhook and returns 200', async () => {
+    mockRepoFindFirst.mockResolvedValueOnce({
+      id: 'r-old',
+      fullName: 'octo/cat',
+      isActive: false,
+      webhookId: null,
+    });
+    mockGetRepo.mockResolvedValueOnce({ id: 99 });
+    mockCreateWebhook.mockResolvedValueOnce('hook-2');
+    mockRepoUpdate.mockResolvedValueOnce({
+      id: 'r-old',
+      fullName: 'octo/cat',
+      githubRepoId: BigInt(99),
+      webhookId: 'hook-2',
+      isActive: true,
+    });
+
+    const req = authedReq({ body: { fullName: 'octo/cat' } });
+    const res = mockRes();
+
+    await RepositoryController.register(req, res);
+
+    expect(mockCreateWebhook).toHaveBeenCalled();
+    expect(mockRepoUpdate).toHaveBeenCalledWith({
+      where: { id: 'r-old' },
+      data: { githubRepoId: BigInt(99), webhookId: 'hook-2', isActive: true },
+    });
+    expect(mockRepoCreate).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+    const out = res.json.mock.calls[0][0];
+    expect(out.repository.githubRepoId).toBe('99');
+    expect(out.repository.isActive).toBe(true);
+  });
 });
 
 describe('RepositoryController.register — breaking path', () => {
@@ -153,8 +217,8 @@ describe('RepositoryController.register — breaking path', () => {
     expect(mockGetRepo).not.toHaveBeenCalled();
   });
 
-  it('returns 409 when the repo is already registered for this user', async () => {
-    mockRepoFindFirst.mockResolvedValueOnce({ id: 'existing' });
+  it('returns 409 when the repo is already actively registered for this user', async () => {
+    mockRepoFindFirst.mockResolvedValueOnce({ id: 'existing', isActive: true });
     const req = authedReq({ body: { fullName: 'octo/cat' } });
     const res = mockRes();
 

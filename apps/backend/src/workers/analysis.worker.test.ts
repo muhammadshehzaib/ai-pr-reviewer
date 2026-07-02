@@ -82,6 +82,7 @@ function makeJobPayload(overrides: Record<string, any> = {}) {
     data: {
       jobId: 'job-1',
       repositoryId: 'r-1',
+      userId: 'u-owner',
       fullName: 'octo/cat',
       eventType: 'PULL_REQUEST',
       referenceId: '42',
@@ -98,6 +99,7 @@ const fullRepoWithVault = {
       encryptedGeminiKey: 'ENC',
       iv: 'IV',
       authTag: 'TAG',
+      salt: 'SALT',
     },
   },
 };
@@ -147,7 +149,7 @@ describe('analysis worker — happy path', () => {
       }),
     );
 
-    expect(mockDecrypt).toHaveBeenCalledWith('ENC', 'IV', 'TAG');
+    expect(mockDecrypt).toHaveBeenCalledWith('ENC', 'IV', 'TAG', 'SALT');
     expect(mockGetProvider).toHaveBeenCalledWith('CLAUDE', 'sk-decrypted');
     expect(mockFetchDiff).toHaveBeenCalledWith('octo', 'cat', 'base-sha', 'head-sha');
     expect(mockCreateReviewComment).toHaveBeenCalledOnce();
@@ -198,8 +200,12 @@ describe('analysis worker — happy path', () => {
     await capturedHandler.fn!(makeJobPayload());
 
     expect(mockEmitStatus).toHaveBeenCalled();
+    // Every emit must target the job owner so other users never see it.
+    for (const call of mockEmitStatus.mock.calls) {
+      expect(call[0]).toBe('u-owner');
+    }
     const lastCall = mockEmitStatus.mock.calls.at(-1);
-    expect(lastCall![2]).toBe('COMPLETED');
+    expect(lastCall![3]).toBe('COMPLETED');
   });
 });
 
@@ -218,7 +224,7 @@ describe('analysis worker — failure paths', () => {
     });
 
     // Should have emitted a FAILED status
-    const statuses = mockEmitStatus.mock.calls.map((c) => c[2]);
+    const statuses = mockEmitStatus.mock.calls.map((c) => c[3]);
     expect(statuses).toContain('FAILED');
   });
 

@@ -65,6 +65,7 @@ export class WebhookController {
       await analysisQueue.add(`analyze-${jobType}-${refId}`, {
         jobId: newJob.id,
         repositoryId: dbRepo.id,
+        userId: dbRepo.userId,
         fullName: repoFullName,
         eventType: jobType,
         referenceId: refId,

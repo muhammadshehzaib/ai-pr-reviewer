@@ -39,7 +39,7 @@ describe('WebhookController.handleGitHubEvent — ping', () => {
 });
 
 describe('WebhookController.handleGitHubEvent — pull_request', () => {
-  const baseRepo = { id: 'r1', isActive: true };
+  const baseRepo = { id: 'r1', userId: 'u-owner', isActive: true };
   const prBody = (action: string) => ({
     action,
     repository: { full_name: 'o/r' },
@@ -74,6 +74,7 @@ describe('WebhookController.handleGitHubEvent — pull_request', () => {
       'analyze-PULL_REQUEST-7',
       expect.objectContaining({
         jobId: 'job-1',
+        userId: 'u-owner',
         eventType: 'PULL_REQUEST',
         payloadSnapshot: { headSha: 'head-sha', baseSha: 'base-sha' },
       }),
@@ -122,7 +123,7 @@ describe('WebhookController.handleGitHubEvent — pull_request', () => {
 
 describe('WebhookController.handleGitHubEvent — push', () => {
   it('queues a PUSH job using the after SHA as referenceId', async () => {
-    mockRepoFindFirst.mockResolvedValueOnce({ id: 'r1', isActive: true });
+    mockRepoFindFirst.mockResolvedValueOnce({ id: 'r1', userId: 'u-owner', isActive: true });
     mockJobCreate.mockResolvedValueOnce({ id: 'job-2' });
 
     const req = mockReq({
@@ -187,7 +188,7 @@ describe('WebhookController.handleGitHubEvent — breaking path', () => {
   });
 
   it('skips unsupported event types (e.g., "star")', async () => {
-    mockRepoFindFirst.mockResolvedValueOnce({ id: 'r1', isActive: true });
+    mockRepoFindFirst.mockResolvedValueOnce({ id: 'r1', userId: 'u-owner', isActive: true });
 
     const req = mockReq({
       headers: { 'x-github-event': 'star' },
@@ -206,7 +207,7 @@ describe('WebhookController.handleGitHubEvent — breaking path', () => {
   });
 
   it('returns 500 when DB write fails', async () => {
-    mockRepoFindFirst.mockResolvedValueOnce({ id: 'r1', isActive: true });
+    mockRepoFindFirst.mockResolvedValueOnce({ id: 'r1', userId: 'u-owner', isActive: true });
     mockJobCreate.mockRejectedValueOnce(new Error('DB exploded'));
 
     const req = mockReq({

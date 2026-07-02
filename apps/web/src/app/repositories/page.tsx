@@ -46,12 +46,17 @@ export default function RepositoriesPage() {
     setBusy(true);
     setMessage(null);
     try {
-      await api('/api/repositories', {
+      const res = await api<{ warning?: string }>('/api/repositories', {
         method: 'POST',
         body: JSON.stringify({ fullName: fullName.trim() }),
       });
       setFullName('');
-      setMessage({ kind: 'ok', text: 'Repo connected. Webhook installed on GitHub.' });
+      setMessage({
+        kind: 'ok',
+        text: res.warning
+          ? `Repo connected. ${res.warning}`
+          : 'Repo connected. Webhook installed on GitHub.',
+      });
       await refresh();
     } catch (err) {
       setMessage({ kind: 'err', text: (err as { error?: string }).error || 'Failed to connect.' });
@@ -155,7 +160,11 @@ export default function RepositoriesPage() {
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>{r.fullName}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        {r.isActive ? `Active · webhook ${r.webhookId}` : 'Inactive'} · Added {new Date(r.createdAt).toLocaleDateString()}
+                        {r.isActive
+                          ? r.webhookId
+                            ? `Active · webhook ${r.webhookId}`
+                            : 'Active · manual audits only'
+                          : 'Inactive'} · Added {new Date(r.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                   </div>

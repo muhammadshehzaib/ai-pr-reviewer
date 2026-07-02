@@ -105,4 +105,29 @@ export class GitHubService {
     const { data } = await this.octokit.pulls.get({ owner, repo, pull_number: pullNumber });
     return data;
   }
+
+  /**
+   * Head commit SHA of the default branch — used by the repo poller to detect
+   * pushes on webhook-less repos.
+   */
+  async getLatestCommitSha(owner: string, repo: string): Promise<string | undefined> {
+    const { data } = await this.octokit.repos.listCommits({ owner, repo, per_page: 1 });
+    return data[0]?.sha;
+  }
+
+  /**
+   * Most recently updated open PRs — used by the repo poller to review fresh
+   * commits on the connected user's pull requests.
+   */
+  async listOpenPullRequests(owner: string, repo: string) {
+    const { data } = await this.octokit.pulls.list({
+      owner,
+      repo,
+      state: 'open',
+      sort: 'updated',
+      direction: 'desc',
+      per_page: 10,
+    });
+    return data;
+  }
 }

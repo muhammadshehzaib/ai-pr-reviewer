@@ -14,6 +14,7 @@ async function startServer() {
 
     // Pre-initialize our background tasks immediately on boot, after env is loaded.
     await import('./workers/analysis.worker');
+    const { startRepoPoller } = await import('./workers/repo-poller');
 
     // Wrap Express with HTTP Server required for WebSockets
     const server = http.createServer(app);
@@ -30,6 +31,9 @@ async function startServer() {
     server.listen(PORT, () => {
       console.log(`🚀 Server launched at http://localhost:${PORT}`);
     });
+
+    // 4. Poll webhook-less repos for new commits/PRs (local-dev webhook substitute)
+    startRepoPoller();
   } catch (err) {
     console.error('❌ Failed to start server:', err);
     process.exit(1);
