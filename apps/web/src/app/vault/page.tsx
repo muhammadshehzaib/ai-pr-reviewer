@@ -15,9 +15,9 @@ interface VaultRecord {
 
 const PROVIDERS: { value: Provider; label: string; hint: string }[] = [
   { value: 'OPENAI', label: 'OpenAI', hint: 'GPT-4o' },
-  { value: 'GEMINI', label: 'Google Gemini', hint: 'gemini-1.5-pro' },
+  { value: 'GEMINI', label: 'Google Gemini', hint: 'gemini-2.5-pro' },
   { value: 'CLAUDE', label: 'Anthropic Claude', hint: 'claude-sonnet-4-6' },
-  { value: 'GROK', label: 'xAI Grok', hint: 'grok-2-1212' },
+  { value: 'GROK', label: 'xAI Grok', hint: 'via custom base URL' },
 ];
 
 export default function VaultPage() {
@@ -77,7 +77,7 @@ export default function VaultPage() {
   }
 
   if (authLoading || !user) {
-    return <div style={{ padding: '3rem', color: 'var(--text-muted)' }}>Loading…</div>;
+    return <div style={{ padding: '3rem', color: 'var(--text-secondary)' }}>Loading…</div>;
   }
 
   return (
@@ -85,32 +85,35 @@ export default function VaultPage() {
       <Sidebar user={user} />
       <main className="main-content" style={{ maxWidth: 720 }}>
         <header style={{ marginBottom: '2.5rem' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>API Key Vault</h1>
-          <p style={{ color: 'var(--text-muted)' }}>
-            Your AI provider key is encrypted with AES-256-GCM before being stored. It only exists in
-            plaintext briefly in memory while a review is running.
+          <h1 className="page-title">
+            API Key Vault
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+            Your provider key is encrypted with AES-256-GCM before it is stored.
           </p>
         </header>
 
         {vault && (
           <div className="glass-card" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <ShieldCheck size={28} color="var(--success-glow)" />
+            <ShieldCheck size={20} color="var(--success)" />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600 }}>Active provider: {vault.provider}</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              <div style={{ fontWeight: 600 }}>
+              Active provider: {PROVIDERS.find((p) => p.value === vault.provider)?.label ?? vault.provider}
+            </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                 Last updated {new Date(vault.updatedAt).toLocaleString()}
               </div>
             </div>
             <button onClick={remove} disabled={busy} className="btn-secondary">
-              <Trash2 size={14} /> Delete
+              <Trash2 size={16} /> Delete
             </button>
           </div>
         )}
 
         <form onSubmit={save} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Key size={20} color="#00f2fe" />
-            <h3>{vault ? 'Update key' : 'Add your first key'}</h3>
+            <Key size={16} />
+            <h3 className="card-title">{vault ? 'Update key' : 'Add your first key'}</h3>
           </div>
 
           <label className="field">
@@ -125,7 +128,7 @@ export default function VaultPage() {
                   data-active={provider === p.value ? 'true' : 'false'}
                 >
                   <span style={{ fontWeight: 600 }}>{p.label}</span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.hint}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{p.hint}</span>
                 </button>
               ))}
             </div>

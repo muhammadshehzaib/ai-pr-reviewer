@@ -103,7 +103,7 @@ export default function RepositoriesPage() {
   }
 
   if (authLoading || !user) {
-    return <div style={{ padding: '3rem', color: 'var(--text-muted)' }}>Loading…</div>;
+    return <div style={{ padding: '3rem', color: 'var(--text-secondary)' }}>Loading…</div>;
   }
 
   return (
@@ -111,23 +111,23 @@ export default function RepositoriesPage() {
       <Sidebar user={user} />
       <main className="main-content" style={{ maxWidth: 900 }}>
         <header style={{ marginBottom: '2.5rem' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Repositories</h1>
-          <p style={{ color: 'var(--text-muted)' }}>
-            Connect a repo to install the webhook. Reviews then run automatically on every pull request and push.
+          <h1 className="page-title">Repositories</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+            Connect a repository to review every pull request and push automatically.
           </p>
         </header>
 
         <form onSubmit={add} className="glass-card" style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <Plus size={20} color="#00f2fe" />
-            <h3>Connect a repository</h3>
+            <Plus size={16} />
+            <h3 className="card-title">Connect a repository</h3>
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="owner/repo  e.g. vercel/next.js"
+              placeholder="owner/repo, e.g. vercel/next.js"
               className="text-input"
               style={{ flex: 1 }}
             />
@@ -143,11 +143,11 @@ export default function RepositoriesPage() {
           </div>
         )}
 
-        <h3 style={{ marginBottom: '1rem' }}>Connected ({repos.filter((r) => r.isActive).length})</h3>
+        <div className="section-label" style={{ marginBottom: '1rem' }}>Connected ({repos.filter((r) => r.isActive).length})</div>
 
         {repos.length === 0 ? (
-          <div className="glass-card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-            <GitBranch size={40} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+          <div className="glass-card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+            <GitBranch size={20} style={{ marginBottom: '0.75rem' }} />
             <p>No repositories connected yet.</p>
           </div>
         ) : (
@@ -156,10 +156,10 @@ export default function RepositoriesPage() {
               <div key={r.id} className="glass-card" style={{ opacity: r.isActive ? 1 : 0.5 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-                    <GitBranch size={20} color="#00f2fe" />
+                    <GitBranch size={18} color="var(--text-secondary)" />
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>{r.fullName}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <div className="mono" style={{ fontWeight: 600, fontSize: '0.9rem' }}>{r.fullName}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                         {r.isActive
                           ? r.webhookId
                             ? `Active · webhook ${r.webhookId}`
@@ -193,7 +193,7 @@ export default function RepositoriesPage() {
                 </div>
 
                 {triggerOpen === r.id && (
-                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.5rem' }}>
                     <input
                       type="number"
                       value={prNumber}

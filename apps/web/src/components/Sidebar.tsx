@@ -38,14 +38,22 @@ export function Sidebar({ user, isConnected }: SidebarProps) {
 
   return (
     <aside className="sidebar">
-      <div style={{ marginBottom: '3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Cpu size={32} color="#00f2fe" />
-        <h2 style={{ fontSize: '1.5rem' }}>
-          AEON <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>AI</span>
-        </h2>
+      <div
+        style={{
+          marginBottom: '2rem',
+          padding: '0 0.75rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.6rem',
+        }}
+      >
+        <Cpu size={18} strokeWidth={2.25} />
+        <span style={{ fontWeight: 600, fontSize: '0.95rem', letterSpacing: '-0.02em' }}>
+          Aeon
+        </span>
       </div>
 
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
         {NAV.map(({ href, label, Icon }) => {
           const active = pathname?.startsWith(href);
           return (
@@ -55,35 +63,30 @@ export function Sidebar({ user, isConnected }: SidebarProps) {
               className="nav-link"
               data-active={active ? 'true' : 'false'}
             >
-              <Icon size={20} />
+              <Icon size={16} strokeWidth={2} />
               <span>{label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         {typeof isConnected === 'boolean' && (
           <div
             style={{
-              padding: '0.75rem 1rem',
-              background: 'rgba(0,0,0,0.3)',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
+              padding: '0.5rem 0.75rem',
+              fontSize: '0.8rem',
+              color: 'var(--text-secondary)',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
             }}
           >
             <div
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: isConnected ? 'var(--success-glow)' : 'red',
-              }}
+              className="status-dot"
+              style={{ background: isConnected ? 'var(--success)' : 'var(--danger)' }}
             />
-            {isConnected ? 'System Connected' : 'Offline'}
+            {isConnected ? 'Connected' : 'Offline'}
           </div>
         )}
 
@@ -94,11 +97,19 @@ export function Sidebar({ user, isConnected }: SidebarProps) {
               <img src={user.avatarUrl} alt={user.username} className="avatar" />
             )}
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div
+                style={{
+                  fontWeight: 500,
+                  fontSize: '0.85rem',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
                 {user.username}
               </div>
               <button onClick={handleLogout} className="link-button">
-                <LogOut size={12} /> Sign out
+                <LogOut size={11} /> Sign out
               </button>
             </div>
           </div>

@@ -117,9 +117,9 @@ describe('<Sidebar />', () => {
   });
 
   describe('connection indicator', () => {
-    it('shows "System Connected" when isConnected=true', () => {
+    it('shows "Connected" when isConnected=true', () => {
       render(<Sidebar user={user} isConnected={true} />);
-      expect(screen.getByText('System Connected')).toBeInTheDocument();
+      expect(screen.getByText('Connected')).toBeInTheDocument();
     });
 
     it('shows "Offline" when isConnected=false', () => {
@@ -129,7 +129,7 @@ describe('<Sidebar />', () => {
 
     it('hides the indicator entirely when isConnected is undefined', () => {
       render(<Sidebar user={user} />);
-      expect(screen.queryByText('System Connected')).not.toBeInTheDocument();
+      expect(screen.queryByText('Connected')).not.toBeInTheDocument();
       expect(screen.queryByText('Offline')).not.toBeInTheDocument();
     });
   });
