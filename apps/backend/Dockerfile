@@ -1,0 +1,32 @@
+# Build from the REPO ROOT (npm workspaces): docker build -f apps/backend/Dockerfile .
+FROM node:22-alpine AS build
+# Prisma engines need openssl on alpine
+RUN apk add --no-cache openssl
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY apps/backend/package.json apps/backend/
+RUN npm ci --workspace=apps/backend
+COPY apps/backend apps/backend
+RUN npm run --workspace=apps/backend prisma:generate \
+  && npm run --workspace=apps/backend build \
+  # workspaces split deps between root and workspace node_modules — the
+  # runtime stage copies both; guarantee the dir exists for the COPY
+  && mkdir -p apps/backend/node_modules
+
+FROM node:22-alpine
+RUN apk add --no-cache openssl
+ENV NODE_ENV=production
+WORKDIR /app
+# Keep the full workspace node_modules: it includes the generated Prisma client
+# and the prisma CLI, which the entrypoint uses for `migrate deploy` on boot.
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/apps/backend/node_modules ./apps/backend/node_modules
+COPY --from=build /app/apps/backend/package.json ./apps/backend/package.json
+COPY --from=build /app/apps/backend/dist ./apps/backend/dist
+COPY apps/backend/prisma ./apps/backend/prisma
+
+EXPOSE 4000
+WORKDIR /app/apps/backend
+# Apply pending migrations, then start the API (+ worker + poller, same process)
+CMD ["sh", "-c", "npx --no-install prisma migrate deploy --schema prisma/schema.prisma && node dist/index.js"]

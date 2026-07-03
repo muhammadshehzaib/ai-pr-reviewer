@@ -1,0 +1,73 @@
+# Production stack for the Contabo VPS. Everything binds to 127.0.0.1 —
+# the host Nginx terminates TLS and proxies the two subdomains in.
+# Secrets come from ./.env.prod (never committed): cp .env.prod.example .env.prod
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aipr-db
+    environment:
+      POSTGRES_USER: reviewer_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ai_reviewer_db
+    volumes:
+      - aipr_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U reviewer_user -d ai_reviewer_db']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: aipr-redis
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: aipr-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      BACKEND_URL: https://reviewerapi.shehzaib.com
+      FRONTEND_URL: https://reviewer.shehzaib.com
+      DATABASE_URL: postgresql://reviewer_user:${POSTGRES_PASSWORD}@postgres:5432/ai_reviewer_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      GITHUB_ACCESS_TOKEN: ${GITHUB_ACCESS_TOKEN}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
+      CLAUDE_MODEL: claude-sonnet-4-6
+      GROK_MODEL: ${GROK_MODEL:-meta-llama/llama-4-scout-17b-16e-instruct}
+      GROK_BASE_URL: ${GROK_BASE_URL:-https://api.groq.com/openai/v1}
+      REPO_POLL_INTERVAL_MS: ${REPO_POLL_INTERVAL_MS:-60000}
+    ports:
+      - '127.0.0.1:8090:4000'
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: https://reviewerapi.shehzaib.com
+    container_name: aipr-web
+    depends_on:
+      - backend
+    ports:
+      - '127.0.0.1:8091:3000'
+    restart: unless-stopped
+
+volumes:
+  aipr_pgdata:

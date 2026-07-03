@@ -23,6 +23,7 @@ tsconfig.tsbuildinfo
 # Environment Variables / Secrets
 .env
 .env.local
+.env.prod
 .env.development.local
 .env.test.local
 .env.production.local
@@ -40,8 +41,7 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Prisma
-/apps/backend/prisma/migrations/
+# Prisma — migrations MUST be committed (prisma migrate deploy replays them in prod)
 
 # Coverage directory used by Jest
 coverage/

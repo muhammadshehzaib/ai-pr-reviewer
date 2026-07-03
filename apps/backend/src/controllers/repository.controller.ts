@@ -92,7 +92,7 @@ export class RepositoryController {
   }
 
   static async deactivate(req: Request, res: Response) {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const repo = await prisma.repository.findFirst({
       where: { id, userId: req.auth!.userId },
     });
@@ -121,7 +121,7 @@ export class RepositoryController {
    *   { headSha, baseSha }    — pushes a synthetic commit-range job
    */
   static async triggerAnalysis(req: Request, res: Response) {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { pullNumber, headSha, baseSha } = req.body ?? {};
 
     const repo = await prisma.repository.findFirst({

@@ -47,7 +47,7 @@ export class JobController {
   static async get(req: Request, res: Response) {
     const job = await prisma.analysisJob.findFirst({
       where: {
-        id: req.params.id,
+        id: String(req.params.id),
         repository: { userId: req.auth!.userId },
       },
       include: { repository: { select: { id: true, fullName: true } } },
