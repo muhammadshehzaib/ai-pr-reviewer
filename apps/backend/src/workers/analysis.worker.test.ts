@@ -26,6 +26,8 @@ const { capturedHandler, WorkerMock, mockJobUpdate, mockRepoFindUnique, mockDecr
   const GitHubServiceCtor = vi.fn(function (this: any) {
     this.fetchDiff = mockFetchDiff;
     this.createReviewComment = mockCreateReviewComment;
+    this.createIssueComment = vi.fn();
+    this.getFileContent = vi.fn().mockResolvedValue(null);
   });
 
   return {

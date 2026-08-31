@@ -8,15 +8,16 @@ datasource db {
 }
 
 model User {
-  id           String       @id @default(uuid())
-  githubId     String       @unique
-  username     String
-  email        String?
-  avatarUrl    String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  vault        Vault?
-  repositories Repository[]
+  id            String         @id @default(uuid())
+  githubId      String         @unique
+  username      String
+  email         String?
+  avatarUrl     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  vault         Vault?
+  repositories  Repository[]
+  installations Installation[]
 
   @@map("users")
 }
@@ -33,7 +34,7 @@ model Vault {
   userId             String     @unique
   user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider           AiProvider @default(GEMINI)
-  encryptedGeminiKey String     @db.Text // Keeping DB column name for back-compat or could rename to encryptedApiKey
+  encryptedGeminiKey String     @db.Text
   iv                 String
   authTag            String
   salt               String     // per-record salt for scrypt key derivation
@@ -42,15 +43,41 @@ model Vault {
   @@map("vaults")
 }
 
+enum PlanTier {
+  FREE
+  INDIE
+  TEAM
+}
+
+model Installation {
+  id                   String        @id @default(uuid())
+  githubInstallationId BigInt        @unique
+  accountLogin         String
+  accountType          String        @default("User") // "User" or "Organization"
+  avatarUrl            String?
+  plan                 PlanTier      @default(FREE)
+  userId               String?
+  user                 User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  repositories         Repository[]
+  usageLedgers         UsageLedger[]
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@map("installations")
+}
+
 model Repository {
   id             String        @id @default(uuid())
   userId         String
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installationId String?
+  installation   Installation? @relation(fields: [installationId], references: [id], onDelete: SetNull)
   githubRepoId   BigInt
   fullName       String
+  isPrivate      Boolean       @default(false)
   webhookId      String?
   isActive       Boolean       @default(true)
-  lastScannedSha String? // default-branch head last seen by the repo poller (webhook-less repos)
+  lastScannedSha String?       // default-branch head last seen by the repo poller (webhook-less repos)
   createdAt      DateTime      @default(now())
   analysisJobs   AnalysisJob[]
 
@@ -67,6 +94,7 @@ enum JobStatus {
   RUNNING
   COMPLETED
   FAILED
+  SKIPPED
 }
 
 model AnalysisJob {
@@ -74,11 +102,25 @@ model AnalysisJob {
   repositoryId String
   repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   eventType    EventType
-  referenceId  String // PR number or Commit SHA
+  referenceId  String     // PR number or Commit SHA
   status       JobStatus  @default(QUEUED)
   results      Json?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
   @@map("analysis_jobs")
+}
+
+model UsageLedger {
+  id                  String       @id @default(uuid())
+  installationId      String
+  installation        Installation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  billingMonth        String       // format "YYYY-MM"
+  publicReviewsCount  Int          @default(0)
+  privateReviewsCount Int          @default(0)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@unique([installationId, billingMonth])
+  @@map("usage_ledgers")
 }

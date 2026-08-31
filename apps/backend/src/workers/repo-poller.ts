@@ -2,6 +2,7 @@ import prisma from '../config/prisma';
 import { redisConnection } from '../config/redis';
 import { analysisQueue } from '../config/queue';
 import { GitHubService } from '../services/github.service';
+import { GitHubAppService } from '../services/github-app.service';
 
 const POLL_INTERVAL_MS = parseInt(process.env.REPO_POLL_INTERVAL_MS || '60000', 10);
 const POLL_ENABLED = process.env.REPO_POLL_ENABLED !== 'false';
@@ -9,6 +10,9 @@ const POLL_ENABLED = process.env.REPO_POLL_ENABLED !== 'false';
 type PolledRepo = {
   id: string;
   fullName: string;
+  isPrivate: boolean;
+  installationId: string | null;
+  installation: { githubInstallationId: bigint } | null;
   lastScannedSha: string | null;
   user: { id: string; username: string };
 };
@@ -24,17 +28,26 @@ type PolledRepo = {
  */
 export async function pollRepositoriesOnce(gh?: GitHubService) {
   const token = process.env.GITHUB_ACCESS_TOKEN;
-  if (!token) return;
-  const github = gh ?? new GitHubService(token);
+  const hasApp = Boolean(process.env.GITHUB_APP_ID && process.env.GITHUB_APP_PRIVATE_KEY);
+  if (!token && !gh && !hasApp) return;
 
   const repos: PolledRepo[] = await prisma.repository.findMany({
     where: { isActive: true, webhookId: null },
-    include: { user: { select: { id: true, username: true } } },
+    include: {
+      user: { select: { id: true, username: true } },
+      installation: { select: { githubInstallationId: true } },
+    },
   });
 
   for (const repo of repos) {
     const [owner, name] = repo.fullName.split('/');
     try {
+      const github =
+        gh ??
+        (await GitHubAppService.getInstallationService(
+          repo.installation?.githubInstallationId?.toString()
+        ));
+
       // 1. Default branch: review anything pushed since the last seen head.
       const head = await github.getLatestCommitSha(owner, name);
       if (head && head !== repo.lastScannedSha) {
@@ -90,6 +103,9 @@ async function queueReview(
     fullName: repo.fullName,
     eventType,
     referenceId,
+    githubInstallationId: repo.installation?.githubInstallationId?.toString() || null,
+    installationId: repo.installationId,
+    isPrivate: repo.isPrivate,
     payloadSnapshot,
   });
 

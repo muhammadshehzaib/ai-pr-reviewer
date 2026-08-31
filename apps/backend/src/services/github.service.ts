@@ -130,4 +130,48 @@ export class GitHubService {
     });
     return data;
   }
+
+  /**
+   * Fetches raw content of a file from a repository at a specific branch/ref.
+   * Returns null if the file does not exist (404).
+   */
+  async getFileContent(owner: string, repo: string, path: string, ref?: string): Promise<string | null> {
+    try {
+      const response = await this.octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+        ...(ref ? { ref } : {}),
+      });
+
+      if ('content' in response.data && typeof response.data.content === 'string') {
+        return Buffer.from(response.data.content, 'base64').toString('utf-8');
+      }
+      return null;
+    } catch (err: any) {
+      if (err.status === 404 || err?.response?.status === 404) {
+        return null;
+      }
+      console.warn(`⚠️ Failed to retrieve ${path} from ${owner}/${repo}:`, err.message);
+      return null;
+    }
+  }
+
+  /**
+   * Posts a top-level issue / PR discussion comment (e.g. for overall review summary or quota notice).
+   */
+  async createIssueComment(owner: string, repo: string, issueNumber: number, body: string) {
+    try {
+      await this.octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body,
+      });
+      console.log(`💬 Posted issue comment successfully to PR #${issueNumber}`);
+    } catch (err) {
+      console.warn(`⚠️ Failed to post issue comment to PR #${issueNumber}:`, (err as Error).message);
+    }
+  }
 }
+

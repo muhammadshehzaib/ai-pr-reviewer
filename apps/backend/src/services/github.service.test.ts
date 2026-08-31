@@ -8,6 +8,8 @@ const {
   mockDeleteWebhook,
   mockGetRepo,
   mockGetPullRequest,
+  mockGetContent,
+  mockCreateIssueComment,
   OctokitCtor,
 } = vi.hoisted(() => {
   const mockCompareCommits = vi.fn();
@@ -16,6 +18,8 @@ const {
   const mockDeleteWebhook = vi.fn();
   const mockGetRepo = vi.fn();
   const mockGetPullRequest = vi.fn();
+  const mockGetContent = vi.fn();
+  const mockCreateIssueComment = vi.fn();
 
   const OctokitCtor = vi.fn(function (this: any, _opts?: unknown) {
     this.repos = {
@@ -23,10 +27,14 @@ const {
       createWebhook: mockCreateWebhook,
       deleteWebhook: mockDeleteWebhook,
       get: mockGetRepo,
+      getContent: mockGetContent,
     };
     this.pulls = {
       createReviewComment: mockCreateReviewComment,
       get: mockGetPullRequest,
+    };
+    this.issues = {
+      createComment: mockCreateIssueComment,
     };
   });
 
@@ -37,6 +45,8 @@ const {
     mockDeleteWebhook,
     mockGetRepo,
     mockGetPullRequest,
+    mockGetContent,
+    mockCreateIssueComment,
     OctokitCtor,
   };
 });
@@ -124,7 +134,6 @@ describe('GitHubService', () => {
     });
 
     it('SWALLOWS errors silently (does not throw) — by design, never break the run for one bad comment', async () => {
-      // This is a behavior contract: a failed comment should NOT crash the worker.
       mockCreateReviewComment.mockRejectedValueOnce(
         new Error('Unprocessable Entity: pull_request_review_thread.line invalid'),
       );
@@ -132,6 +141,48 @@ describe('GitHubService', () => {
       await expect(
         svc.createReviewComment('o', 'r', 42, 'sha', 'f.ts', 999999, 'body'),
       ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('getFileContent()', () => {
+    it('decodes base64 content returned by Octokit', async () => {
+      const rawText = 'version: 1\nmin_severity: "high"';
+      const base64Content = Buffer.from(rawText).toString('base64');
+      mockGetContent.mockResolvedValueOnce({
+        data: {
+          type: 'file',
+          content: base64Content,
+        },
+      });
+
+      const content = await svc.getFileContent('owner', 'repo', '.aipr.yml', 'main');
+      expect(content).toBe(rawText);
+      expect(mockGetContent).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        path: '.aipr.yml',
+        ref: 'main',
+      });
+    });
+
+    it('returns null on 404 error without throwing', async () => {
+      mockGetContent.mockRejectedValueOnce({ status: 404, message: 'Not Found' });
+      const content = await svc.getFileContent('owner', 'repo', '.aipr.yml');
+      expect(content).toBeNull();
+    });
+  });
+
+  describe('createIssueComment()', () => {
+    it('creates an issue/PR comment with the body', async () => {
+      mockCreateIssueComment.mockResolvedValueOnce({ data: { id: 777 } });
+
+      await svc.createIssueComment('owner', 'repo', 12, 'Summary report');
+      expect(mockCreateIssueComment).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        issue_number: 12,
+        body: 'Summary report',
+      });
     });
   });
 

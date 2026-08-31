@@ -1,25 +1,34 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import { GitHubService } from '../services/github.service';
+import { GitHubAppService } from '../services/github-app.service';
 import { analysisQueue } from '../config/queue';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
 
-function getBotGitHub(): GitHubService {
-  const token = process.env.GITHUB_ACCESS_TOKEN;
-  if (!token) throw new Error('GITHUB_ACCESS_TOKEN not configured');
-  return new GitHubService(token);
+async function getGitHub(installationId?: string | number | null): Promise<GitHubService> {
+  return await GitHubAppService.getInstallationService(installationId);
 }
 
 export class RepositoryController {
   static async list(req: Request, res: Response) {
     const repos = await prisma.repository.findMany({
       where: { userId: req.auth!.userId },
+      include: { installation: true },
       orderBy: { createdAt: 'desc' },
     });
     // BigInt is not JSON-serializable — coerce to string
     return res.json({
-      repositories: repos.map((r) => ({ ...r, githubRepoId: r.githubRepoId.toString() })),
+      repositories: repos.map((r) => ({
+        ...r,
+        githubRepoId: r.githubRepoId.toString(),
+        installation: r.installation
+          ? {
+              ...r.installation,
+              githubInstallationId: r.installation.githubInstallationId.toString(),
+            }
+          : null,
+      })),
     });
   }
 
@@ -32,19 +41,17 @@ export class RepositoryController {
     const [owner, repo] = fullName.split('/');
     const existing = await prisma.repository.findFirst({
       where: { userId: req.auth!.userId, fullName },
+      include: { installation: true },
     });
     if (existing?.isActive) {
       return res.status(409).json({ error: 'Repository already registered' });
     }
 
     try {
-      const gh = getBotGitHub();
+      const gh = await getGitHub(existing?.installation?.githubInstallationId?.toString());
       const ghRepo = await gh.getRepo(owner, repo);
       const webhookUrl = `${BACKEND_URL}/api/webhooks/github`;
 
-      // GitHub refuses webhook URLs that aren't publicly reachable (e.g.
-      // localhost in local dev). Manual audits don't need the webhook, so
-      // connect the repo anyway and surface a warning instead of failing.
       let hookId: string | null = null;
       try {
         hookId = await gh.createWebhook(owner, repo, webhookUrl, process.env.GITHUB_WEBHOOK_SECRET);
@@ -54,26 +61,37 @@ export class RepositoryController {
           /isn't reachable over the public internet/i.test(msg) || webhookUrl.includes('localhost');
         if (!unreachableUrl) throw hookErr;
         console.warn(
-          `⚠️ Webhook not installed for ${fullName} (${msg}). Connected for manual audits only.`,
+          `⚠️ Webhook not installed for ${fullName} (${msg}). Connected for manual audits only.`
         );
       }
 
-      // Disconnect soft-deletes (isActive: false, webhookId: null), so an
-      // existing inactive row is reactivated with the fresh webhook rather
-      // than treated as a duplicate.
+      const updateData: any = {
+        githubRepoId: BigInt(ghRepo.id),
+        webhookId: hookId,
+        isActive: true,
+      };
+      if (typeof ghRepo.private === 'boolean') {
+        updateData.isPrivate = ghRepo.private;
+      }
+
+      const createData: any = {
+        userId: req.auth!.userId,
+        githubRepoId: BigInt(ghRepo.id),
+        fullName,
+        webhookId: hookId,
+        isActive: true,
+      };
+      if (typeof ghRepo.private === 'boolean') {
+        createData.isPrivate = ghRepo.private;
+      }
+
       const dbRepo = existing
         ? await prisma.repository.update({
             where: { id: existing.id },
-            data: { githubRepoId: BigInt(ghRepo.id), webhookId: hookId, isActive: true },
+            data: updateData,
           })
         : await prisma.repository.create({
-            data: {
-              userId: req.auth!.userId,
-              githubRepoId: BigInt(ghRepo.id),
-              fullName,
-              webhookId: hookId,
-              isActive: true,
-            },
+            data: createData,
           });
 
       return res.status(existing ? 200 : 201).json({
@@ -95,13 +113,15 @@ export class RepositoryController {
     const id = String(req.params.id);
     const repo = await prisma.repository.findFirst({
       where: { id, userId: req.auth!.userId },
+      include: { installation: true },
     });
     if (!repo) return res.status(404).json({ error: 'Repository not found' });
 
     if (repo.webhookId) {
       try {
         const [owner, name] = repo.fullName.split('/');
-        await getBotGitHub().deleteWebhook(owner, name, Number(repo.webhookId));
+        const gh = await getGitHub(repo.installation?.githubInstallationId?.toString());
+        await gh.deleteWebhook(owner, name, Number(repo.webhookId));
       } catch (err) {
         console.warn('⚠️ Failed to delete GitHub webhook — proceeding with DB deactivation:', err);
       }
@@ -115,17 +135,13 @@ export class RepositoryController {
     return res.json({ status: 'OK' });
   }
 
-  /**
-   * Manually queues an analysis job. Accepts either:
-   *   { pullNumber: number }  — resolves base/head from GitHub
-   *   { headSha, baseSha }    — pushes a synthetic commit-range job
-   */
   static async triggerAnalysis(req: Request, res: Response) {
     const id = String(req.params.id);
     const { pullNumber, headSha, baseSha } = req.body ?? {};
 
     const repo = await prisma.repository.findFirst({
       where: { id, userId: req.auth!.userId, isActive: true },
+      include: { installation: true },
     });
     if (!repo) return res.status(404).json({ error: 'Repository not found or inactive' });
 
@@ -136,8 +152,9 @@ export class RepositoryController {
     let resolvedBase: string;
 
     try {
+      const gh = await getGitHub(repo.installation?.githubInstallationId?.toString());
       if (pullNumber) {
-        const pr = await getBotGitHub().getPullRequest(owner, name, Number(pullNumber));
+        const pr = await gh.getPullRequest(owner, name, Number(pullNumber));
         eventType = 'PULL_REQUEST';
         referenceId = String(pullNumber);
         resolvedHead = pr.head.sha;
@@ -172,6 +189,9 @@ export class RepositoryController {
       fullName: repo.fullName,
       eventType,
       referenceId,
+      githubInstallationId: repo.installation?.githubInstallationId?.toString() || null,
+      installationId: repo.installationId,
+      isPrivate: repo.isPrivate,
       payloadSnapshot: { headSha: resolvedHead, baseSha: resolvedBase },
     });
 
