@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { QuotaService } from './quota.service';
+import { QuotaService, FREE_TIER_PRIVATE_LIMIT } from './quota.service';
 import prisma from '../config/prisma';
 
 vi.mock('../config/prisma', () => ({
@@ -18,65 +18,131 @@ describe('QuotaService', () => {
     vi.clearAllMocks();
   });
 
-  it('allows unlimited reviews on public repositories regardless of count', async () => {
-    (prisma.usageLedger.upsert as any).mockResolvedValueOnce({
-      publicReviewsCount: 150,
-      privateReviewsCount: 0,
-    });
+  describe('getCurrentBillingMonth', () => {
+    it('formats month in YYYY-MM UTC format', () => {
+      const date1 = new Date('2026-09-15T10:00:00Z');
+      expect(QuotaService.getCurrentBillingMonth(date1)).toBe('2026-09');
 
-    const result = await QuotaService.checkQuota('inst-123', false);
-    expect(result.allowed).toBe(true);
-    expect(result.usage.limit).toBeNull();
+      const date2 = new Date('2026-01-01T00:00:00Z');
+      expect(QuotaService.getCurrentBillingMonth(date2)).toBe('2026-01');
+
+      const date3 = new Date('2026-12-31T23:59:59Z');
+      expect(QuotaService.getCurrentBillingMonth(date3)).toBe('2026-12');
+    });
   });
 
-  it('allows private reviews when within the 50 reviews/month free quota', async () => {
-    (prisma.installation.findUnique as any).mockResolvedValueOnce({
-      id: 'inst-123',
-      plan: 'FREE',
+  describe('checkQuota', () => {
+    it('allows review by default when no installation is linked (legacy mode)', async () => {
+      const result = await QuotaService.checkQuota(null, true);
+      expect(result.allowed).toBe(true);
+      expect(result.usage.limit).toBeNull();
     });
 
-    (prisma.usageLedger.upsert as any).mockResolvedValueOnce({
-      publicReviewsCount: 10,
-      privateReviewsCount: 42,
+    it('allows unlimited reviews on public repositories regardless of count', async () => {
+      (prisma.usageLedger.upsert as any).mockResolvedValueOnce({
+        publicReviewsCount: 150,
+        privateReviewsCount: 0,
+      });
+
+      const result = await QuotaService.checkQuota('inst-123', false);
+      expect(result.allowed).toBe(true);
+      expect(result.usage.isPrivate).toBe(false);
+      expect(result.usage.limit).toBeNull();
     });
 
-    const result = await QuotaService.checkQuota('inst-123', true);
-    expect(result.allowed).toBe(true);
-    expect(result.usage.current).toBe(42);
-    expect(result.usage.limit).toBe(50);
+    it('allows private reviews when within the 50 reviews/month free quota', async () => {
+      (prisma.installation.findUnique as any).mockResolvedValueOnce({
+        id: 'inst-123',
+        plan: 'FREE',
+      });
+
+      (prisma.usageLedger.upsert as any).mockResolvedValueOnce({
+        publicReviewsCount: 10,
+        privateReviewsCount: 42,
+      });
+
+      const result = await QuotaService.checkQuota('inst-123', true);
+      expect(result.allowed).toBe(true);
+      expect(result.usage.current).toBe(42);
+      expect(result.usage.limit).toBe(FREE_TIER_PRIVATE_LIMIT);
+    });
+
+    it('rejects private reviews when monthly free quota is reached (>= 50)', async () => {
+      (prisma.installation.findUnique as any).mockResolvedValueOnce({
+        id: 'inst-123',
+        plan: 'FREE',
+      });
+
+      (prisma.usageLedger.upsert as any).mockResolvedValueOnce({
+        publicReviewsCount: 5,
+        privateReviewsCount: 50,
+      });
+
+      const result = await QuotaService.checkQuota('inst-123', true);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain('Monthly free tier quota exceeded');
+      expect(result.usage.current).toBe(50);
+      expect(result.usage.limit).toBe(50);
+    });
+
+    it('allows unlimited private reviews for INDIE and TEAM plans', async () => {
+      (prisma.installation.findUnique as any).mockResolvedValueOnce({
+        id: 'inst-paid',
+        plan: 'INDIE',
+      });
+
+      (prisma.usageLedger.upsert as any).mockResolvedValueOnce({
+        publicReviewsCount: 20,
+        privateReviewsCount: 250,
+      });
+
+      const result = await QuotaService.checkQuota('inst-paid', true);
+      expect(result.allowed).toBe(true);
+      expect(result.usage.limit).toBeNull();
+    });
   });
 
-  it('rejects private reviews when monthly free quota is reached (>= 50)', async () => {
-    (prisma.installation.findUnique as any).mockResolvedValueOnce({
-      id: 'inst-123',
-      plan: 'FREE',
+  describe('incrementUsage', () => {
+    it('increments privateReviewsCount for private repository review', async () => {
+      await QuotaService.incrementUsage('inst-123', true);
+
+      expect(prisma.usageLedger.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            installationId_billingMonth: {
+              installationId: 'inst-123',
+              billingMonth: expect.any(String),
+            },
+          }),
+          update: { privateReviewsCount: { increment: 1 } },
+        })
+      );
     });
 
-    (prisma.usageLedger.upsert as any).mockResolvedValueOnce({
-      publicReviewsCount: 5,
-      privateReviewsCount: 50,
+    it('increments publicReviewsCount for public repository review', async () => {
+      await QuotaService.incrementUsage('inst-123', false);
+
+      expect(prisma.usageLedger.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: { publicReviewsCount: { increment: 1 } },
+        })
+      );
     });
 
-    const result = await QuotaService.checkQuota('inst-123', true);
-    expect(result.allowed).toBe(false);
-    expect(result.reason).toContain('Monthly free tier quota exceeded');
-    expect(result.usage.current).toBe(50);
-    expect(result.usage.limit).toBe(50);
+    it('gracefully does nothing if installationId is null or undefined', async () => {
+      await QuotaService.incrementUsage(null, true);
+      await QuotaService.incrementUsage(undefined, false);
+
+      expect(prisma.usageLedger.upsert).not.toHaveBeenCalled();
+    });
   });
 
-  it('allows unlimited private reviews for INDIE and TEAM plans', async () => {
-    (prisma.installation.findUnique as any).mockResolvedValueOnce({
-      id: 'inst-paid',
-      plan: 'INDIE',
+  describe('getQuotaExceededComment', () => {
+    it('returns formatted markdown notification with upgrade info', () => {
+      const comment = QuotaService.getQuotaExceededComment(50, 50);
+      expect(comment).toContain('Free Tier Monthly Limit Reached');
+      expect(comment).toContain('50 of 50');
+      expect(comment).toContain('Indie Plan');
     });
-
-    (prisma.usageLedger.upsert as any).mockResolvedValueOnce({
-      publicReviewsCount: 20,
-      privateReviewsCount: 250,
-    });
-
-    const result = await QuotaService.checkQuota('inst-paid', true);
-    expect(result.allowed).toBe(true);
-    expect(result.usage.limit).toBeNull();
   });
 });

@@ -1,21 +1,59 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockRepoFindFirst, mockJobCreate, mockQueueAdd } = vi.hoisted(() => ({
+const {
+  mockRepoFindFirst,
+  mockRepoCreate,
+  mockRepoUpdate,
+  mockRepoUpdateMany,
+  mockRepoUpsert,
+  mockJobCreate,
+  mockQueueAdd,
+  mockInstallationUpsert,
+  mockInstallationDeleteMany,
+  mockInstallationFindUnique,
+  mockMarketplaceHandle,
+} = vi.hoisted(() => ({
   mockRepoFindFirst: vi.fn(),
+  mockRepoCreate: vi.fn(),
+  mockRepoUpdate: vi.fn(),
+  mockRepoUpdateMany: vi.fn(),
+  mockRepoUpsert: vi.fn(),
   mockJobCreate: vi.fn(),
   mockQueueAdd: vi.fn(),
+  mockInstallationUpsert: vi.fn(),
+  mockInstallationDeleteMany: vi.fn(),
+  mockInstallationFindUnique: vi.fn(),
+  mockMarketplaceHandle: vi.fn(),
 }));
 
 vi.mock('../config/prisma', () => ({
   default: {
-    repository: { findFirst: mockRepoFindFirst },
+    repository: {
+      findFirst: mockRepoFindFirst,
+      create: mockRepoCreate,
+      update: mockRepoUpdate,
+      updateMany: mockRepoUpdateMany,
+      upsert: mockRepoUpsert,
+    },
+    installation: {
+      upsert: mockInstallationUpsert,
+      deleteMany: mockInstallationDeleteMany,
+      findUnique: mockInstallationFindUnique,
+    },
     analysisJob: { create: mockJobCreate },
+    usageLedger: { upsert: vi.fn() },
   },
 }));
 
 vi.mock('../config/queue', () => ({
   analysisQueue: { add: mockQueueAdd },
   ANALYSIS_QUEUE_NAME: 'test-queue',
+}));
+
+vi.mock('../services/marketplace.service', () => ({
+  MarketplaceService: {
+    handleMarketplaceEvent: mockMarketplaceHandle,
+  },
 }));
 
 import { WebhookController } from './webhook.controller';
@@ -38,11 +76,100 @@ describe('WebhookController.handleGitHubEvent — ping', () => {
   });
 });
 
+describe('WebhookController.handleGitHubEvent — installation', () => {
+  it('registers new installation on action "created"', async () => {
+    const req = mockReq({
+      headers: { 'x-github-event': 'installation' },
+      body: {
+        action: 'created',
+        installation: {
+          id: 55555,
+          account: { login: 'my-org', type: 'Organization', avatar_url: 'https://avatar.png' },
+        },
+      },
+    });
+    const res = mockRes();
+
+    await WebhookController.handleGitHubEvent(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ status: 'PROCESSED', action: 'created' });
+    expect(mockInstallationUpsert).toHaveBeenCalledWith({
+      where: { githubInstallationId: BigInt(55555) },
+      update: { accountLogin: 'my-org', accountType: 'Organization', avatarUrl: 'https://avatar.png' },
+      create: {
+        githubInstallationId: BigInt(55555),
+        accountLogin: 'my-org',
+        accountType: 'Organization',
+        avatarUrl: 'https://avatar.png',
+        plan: 'FREE',
+      },
+    });
+  });
+
+  it('deletes installation on action "deleted"', async () => {
+    const req = mockReq({
+      headers: { 'x-github-event': 'installation' },
+      body: {
+        action: 'deleted',
+        installation: { id: 55555, account: { login: 'my-org' } },
+      },
+    });
+    const res = mockRes();
+
+    await WebhookController.handleGitHubEvent(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mockInstallationDeleteMany).toHaveBeenCalledWith({
+      where: { githubInstallationId: BigInt(55555) },
+    });
+  });
+});
+
+describe('WebhookController.handleGitHubEvent — marketplace_purchase', () => {
+  it('delegates to MarketplaceService and returns processed result', async () => {
+    mockMarketplaceHandle.mockResolvedValueOnce({ status: 'ACTIVE', plan: 'INDIE' });
+
+    const req = mockReq({
+      headers: { 'x-github-event': 'marketplace_purchase' },
+      body: {
+        action: 'purchased',
+        marketplace_purchase: {
+          account: { id: 123, login: 'octocat' },
+          plan: { id: 1, name: 'Indie Plan' },
+        },
+      },
+    });
+    const res = mockRes();
+
+    await WebhookController.handleGitHubEvent(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ status: 'ACTIVE', plan: 'INDIE' });
+    expect(mockMarketplaceHandle).toHaveBeenCalledWith(req.body);
+  });
+
+  it('returns 500 when MarketplaceService throws an error', async () => {
+    mockMarketplaceHandle.mockRejectedValueOnce(new Error('Invalid marketplace payload'));
+
+    const req = mockReq({
+      headers: { 'x-github-event': 'marketplace_purchase' },
+      body: { action: 'purchased' },
+    });
+    const res = mockRes();
+
+    await WebhookController.handleGitHubEvent(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid marketplace payload' });
+  });
+});
+
 describe('WebhookController.handleGitHubEvent — pull_request', () => {
-  const baseRepo = { id: 'r1', userId: 'u-owner', isActive: true };
+  const baseRepo = { id: 'r1', userId: 'u-owner', isActive: true, isPrivate: false };
   const prBody = (action: string) => ({
     action,
-    repository: { full_name: 'o/r' },
+    repository: { full_name: 'o/r', private: false },
     pull_request: {
       number: 7,
       head: { sha: 'head-sha' },
@@ -74,32 +201,36 @@ describe('WebhookController.handleGitHubEvent — pull_request', () => {
       'analyze-PULL_REQUEST-7',
       expect.objectContaining({
         jobId: 'job-1',
+        repositoryId: 'r1',
         userId: 'u-owner',
+        fullName: 'o/r',
         eventType: 'PULL_REQUEST',
-        payloadSnapshot: { headSha: 'head-sha', baseSha: 'base-sha' },
+        referenceId: '7',
       }),
     );
     expect(res.status).toHaveBeenCalledWith(202);
+    expect(res.json).toHaveBeenCalledWith({
+      status: 'QUEUED',
+      jobId: 'job-1',
+      message: expect.any(String),
+    });
   });
 
-  it.each(['synchronize', 'reopened'])(
-    'queues a job for action "%s" too',
-    async (action) => {
-      mockRepoFindFirst.mockResolvedValueOnce(baseRepo);
-      mockJobCreate.mockResolvedValueOnce({ id: 'j' });
+  it('queues a job for action "synchronize" too', async () => {
+    mockRepoFindFirst.mockResolvedValueOnce(baseRepo);
+    mockJobCreate.mockResolvedValueOnce({ id: 'job-2' });
 
-      const req = mockReq({
-        headers: { 'x-github-event': 'pull_request' },
-        body: prBody(action),
-      });
-      const res = mockRes();
+    const req = mockReq({
+      headers: { 'x-github-event': 'pull_request' },
+      body: prBody('synchronize'),
+    });
+    const res = mockRes();
 
-      await WebhookController.handleGitHubEvent(req, res);
+    await WebhookController.handleGitHubEvent(req, res);
 
-      expect(mockQueueAdd).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(202);
-    },
-  );
+    expect(mockQueueAdd).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(202);
+  });
 
   it('skips when action is "closed" / "labeled" etc.', async () => {
     mockRepoFindFirst.mockResolvedValueOnce(baseRepo);
@@ -117,6 +248,7 @@ describe('WebhookController.handleGitHubEvent — pull_request', () => {
       status: 'SKIPPED',
       reason: 'action-closed-ignored',
     });
+    expect(mockJobCreate).not.toHaveBeenCalled();
     expect(mockQueueAdd).not.toHaveBeenCalled();
   });
 });
@@ -124,26 +256,33 @@ describe('WebhookController.handleGitHubEvent — pull_request', () => {
 describe('WebhookController.handleGitHubEvent — push', () => {
   it('queues a PUSH job using the after SHA as referenceId', async () => {
     mockRepoFindFirst.mockResolvedValueOnce({ id: 'r1', userId: 'u-owner', isActive: true });
-    mockJobCreate.mockResolvedValueOnce({ id: 'job-2' });
+    mockJobCreate.mockResolvedValueOnce({ id: 'job-push-1' });
 
     const req = mockReq({
       headers: { 'x-github-event': 'push' },
       body: {
         repository: { full_name: 'o/r' },
-        before: 'before-sha',
         after: 'after-sha',
+        before: 'before-sha',
       },
     });
     const res = mockRes();
 
     await WebhookController.handleGitHubEvent(req, res);
 
+    expect(mockJobCreate).toHaveBeenCalledWith({
+      data: {
+        repositoryId: 'r1',
+        eventType: 'PUSH',
+        referenceId: 'after-sha',
+        status: 'QUEUED',
+      },
+    });
     expect(mockQueueAdd).toHaveBeenCalledWith(
       'analyze-PUSH-after-sha',
       expect.objectContaining({
-        eventType: 'PUSH',
+        jobId: 'job-push-1',
         referenceId: 'after-sha',
-        payloadSnapshot: { headSha: 'after-sha', baseSha: 'before-sha' },
       }),
     );
     expect(res.status).toHaveBeenCalledWith(202);
@@ -161,6 +300,7 @@ describe('WebhookController.handleGitHubEvent — breaking path', () => {
     await WebhookController.handleGitHubEvent(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: expect.stringMatching(/repository/i) });
     expect(mockQueueAdd).not.toHaveBeenCalled();
   });
 
@@ -171,7 +311,7 @@ describe('WebhookController.handleGitHubEvent — breaking path', () => {
       headers: { 'x-github-event': 'pull_request' },
       body: {
         action: 'opened',
-        repository: { full_name: 'unknown/repo' },
+        repository: { full_name: 'stranger/unregistered' },
         pull_request: { number: 1, head: { sha: 'h' }, base: { sha: 'b' } },
       },
     });
