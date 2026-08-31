@@ -5,6 +5,7 @@ import io from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Activity, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Sidebar } from '../../components/Sidebar';
+import { UsageMeter } from '../../components/UsageMeter';
 import { useAuth } from '../../lib/useAuth';
 import { BACKEND_URL } from '../../lib/api';
 
@@ -53,14 +54,14 @@ export default function DashboardPage() {
       <Sidebar user={user} isConnected={isConnected} />
 
       <main className="main-content">
-        <header style={{ marginBottom: '2.5rem' }}>
-          <h1 className="page-title">
-            Activity
-          </h1>
+        <header style={{ marginBottom: '1.75rem' }}>
+          <h1 className="page-title">Activity</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-            Live review runs across your connected repositories.
+            Live review runs and usage quotas across your connected repositories.
           </p>
         </header>
+
+        <UsageMeter />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '2rem' }}>
           <div>
