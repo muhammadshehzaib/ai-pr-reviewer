@@ -255,4 +255,4 @@ ai-pr-reviewer/
 
 ## License
 
-ISC
+[AGPL-3.0](LICENSE) - GNU Affero General Public License v3.0
