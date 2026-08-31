@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import vaultRoutes from './routes/vault.routes';
 import repositoryRoutes from './routes/repository.routes';
 import jobRoutes from './routes/job.routes';
+import billingRoutes from './routes/billing.routes';
 
 const app: Application = express();
 
@@ -43,5 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/repositories', repositoryRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/billing', billingRoutes);
 
 export default app;
+

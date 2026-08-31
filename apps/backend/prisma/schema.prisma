@@ -56,6 +56,12 @@ model Installation {
   accountType          String        @default("User") // "User" or "Organization"
   avatarUrl            String?
   plan                 PlanTier      @default(FREE)
+  marketplacePlanId    BigInt?
+  marketplacePlanName  String?
+  marketplaceUnitCount Int           @default(1)
+  marketplaceStatus    String        @default("ACTIVE")
+  billingCycle         String        @default("monthly")
+  nextBillingDate      DateTime?
   userId               String?
   user                 User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   repositories         Repository[]
