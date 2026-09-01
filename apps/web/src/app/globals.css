@@ -52,8 +52,8 @@
 
   --shadow-bento-hover: 0px 20px 24px -8px rgba(0,0,0,0.06),
                         0px 8px 12px -4px rgba(0,0,0,0.03),
-                        0px 0px 0px 1px rgba(37,99,235,0.2),
-                        0px 0px 0px 4px rgba(37,99,235,0.06);
+                        0px 0px 0px 1px rgba(37,99,235,0.25),
+                        0px 0px 0px 4px rgba(37,99,235,0.08);
 
   --shadow-pill-nav: 0px 12px 32px -6px rgba(0,0,0,0.12),
                      0px 0px 0px 1px rgba(111,107,107,0.1),
@@ -67,6 +67,127 @@
                           
   --shadow-diff-card: 0px 20px 40px -12px rgba(15, 23, 42, 0.12),
                       0px 0px 0px 1px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================================
+   Aceternity UI Patterns & Micro-Animations (Manu Arora Style)
+   ========================================================================= */
+
+.bg-dot-pattern {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.09) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-dot-pattern-dark {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.bg-grid-mask {
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, #000 30%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, #000 30%, transparent 85%);
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 100%
+  );
+  transition: all 0.6s ease;
+}
+
+.btn-shimmer:hover::before {
+  left: 100%;
+}
+
+@keyframes float-subtle {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(1deg); }
+}
+
+.animate-float {
+  animation: float-subtle 4s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+
+.pulse-indicator {
+  position: relative;
+  display: inline-flex;
+}
+
+.pulse-indicator::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.6;
+  animation: pulse-ring 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+
+@keyframes laser-scan {
+  0% { top: 0%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 98%; opacity: 0; }
+}
+
+.diff-laser-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #3b82f6 20%, #60a5fa 50%, #3b82f6 80%, transparent 100%);
+  box-shadow: 0 0 12px #3b82f6, 0 0 24px #60a5fa;
+  animation: laser-scan 2.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.aceternity-glow-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-bento);
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aceternity-glow-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 20px 35px -10px rgba(37, 99, 235, 0.12), 0 0 0 1px rgba(37, 99, 235, 0.2);
 }
 
 * {
@@ -130,7 +251,7 @@ button {
 .hero-aura-gradient {
   position: absolute;
   inset: 0;
-  background: radial-gradient(130% 92% at 50% -12%, #2563eb 0%, #3b82f6 22%, #60a5fa 44%, #93c5fd 64%, #cfe0fb 82%, #ffffff 100%);
+  background: radial-gradient(135% 100% at 50% -15%, #1d4ed8 0%, #2563eb 24%, #3b82f6 48%, #60a5fa 68%, #93c5fd 84%, #dbeafe 94%, #ffffff 100%);
 }
 
 .hero-aura-fade {

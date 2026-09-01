@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Cpu, ChevronRight, Menu, X, GitBranch, ArrowUpRight } from 'lucide-react';
 import { BACKEND_URL } from '../lib/api';
 
+import { PullPilotLogo } from './PullPilotLogo';
+
 interface NavbarProps {
   user?: { username: string; avatarUrl?: string | null } | null;
 }
@@ -31,35 +33,21 @@ export function Navbar({ user }: NavbarProps) {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
+              gap: '0.6rem',
               textDecoration: 'none',
             }}
           >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                boxShadow: '0 2px 6px rgba(18, 17, 255, 0.3)',
-              }}
-            >
-              <Cpu size={16} strokeWidth={2.5} />
-            </div>
+            <PullPilotLogo size={28} />
             <span
               style={{
-                fontSize: '0.82rem',
+                fontSize: '0.84rem',
                 fontWeight: 700,
-                letterSpacing: '0.14em',
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 color: '#0f172a',
               }}
             >
-              aeon.ai
+              pullpilot.ai
             </span>
           </Link>
 
@@ -75,8 +63,8 @@ export function Navbar({ user }: NavbarProps) {
             <a href="#demo" className="nav-link-item">
               Live Demo
             </a>
-            <a href="#why-aeon" className="nav-link-item">
-              Why Aeon
+            <a href="#why-pullpilot" className="nav-link-item">
+              Why PullPilot
             </a>
             <a href="#use-cases" className="nav-link-item">
               Use Cases
@@ -119,7 +107,7 @@ export function Navbar({ user }: NavbarProps) {
                 </a>
                 <a
                   href={`${BACKEND_URL}/api/auth/github`}
-                  className="btn-primary-pill"
+                  className="btn-primary-pill btn-shimmer"
                   style={{
                     fontSize: '0.85rem',
                     padding: '0.5rem 1.15rem',
@@ -192,12 +180,12 @@ export function Navbar({ user }: NavbarProps) {
               Live Demo
             </a>
             <a
-              href="#why-aeon"
+              href="#why-pullpilot"
               onClick={() => setMobileMenuOpen(false)}
               className="nav-link-item"
               style={{ fontSize: '1.05rem', padding: '0.6rem 0.5rem' }}
             >
-              Why Aeon
+              Why PullPilot
             </a>
             <a
               href="#use-cases"

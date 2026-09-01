@@ -25,6 +25,7 @@ import { BentoFeatures } from '../components/BentoFeatures';
 import { UseCasesSection } from '../components/UseCasesSection';
 import { TestimonialsSection } from '../components/TestimonialsSection';
 import { FaqAccordion } from '../components/FaqAccordion';
+import { PullPilotLogo } from '../components/PullPilotLogo';
 
 export default function HomePage() {
   const { user } = useAuth(false);
@@ -103,8 +104,8 @@ export default function HomePage() {
           >
             <span>Generate AI Reviews for</span>
 
-            {/* Platform Icons */}
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+            {/* Platform Icons with Aceternity subtle float */}
+            <span className="animate-float" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
               {/* GitHub */}
               <span
                 className="inline-platform-chip"
@@ -158,7 +159,7 @@ export default function HomePage() {
           >
             <a
               href={`${BACKEND_URL}/api/auth/github`}
-              className="btn-primary-pill"
+              className="btn-primary-pill btn-shimmer"
               style={{
                 fontSize: '1.05rem',
                 padding: '0.85rem 1.85rem',
@@ -187,21 +188,57 @@ export default function HomePage() {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              gap: '1.75rem',
+              gap: '0.85rem',
               flexWrap: 'wrap',
-              fontSize: '0.86rem',
-              color: 'rgba(255, 255, 255, 0.9)',
-              fontWeight: 500,
+              fontSize: '0.88rem',
+              color: '#1e293b',
+              fontWeight: 600,
             }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-              <CheckCircle2 size={15} color="#ffffff" /> Unlimited Public Repos
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(8px)',
+                padding: '5px 14px',
+                borderRadius: 9999,
+                border: '1px solid rgba(0, 0, 0, 0.08)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <CheckCircle2 size={16} color="#10b981" /> Unlimited Public Repos
             </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-              <CheckCircle2 size={15} color="#ffffff" /> 50 Free Private Reviews/Mo
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(8px)',
+                padding: '5px 14px',
+                borderRadius: 9999,
+                border: '1px solid rgba(0, 0, 0, 0.08)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <CheckCircle2 size={16} color="#10b981" /> 50 Free Private Reviews/Mo
             </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-              <CheckCircle2 size={15} color="#ffffff" /> Zero AI Training on Your Code
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(8px)',
+                padding: '5px 14px',
+                borderRadius: 9999,
+                border: '1px solid rgba(0, 0, 0, 0.08)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <CheckCircle2 size={16} color="#10b981" /> Zero AI Training on Your Code
             </span>
           </div>
         </div>
@@ -213,15 +250,15 @@ export default function HomePage() {
       {/* Interactive PR Diff Review Simulator */}
       <InteractiveDiffPlayground />
 
-      {/* "Why Aeon?" Bento Grid */}
+      {/* "Why PullPilot?" Bento Grid */}
       <BentoFeatures />
 
       {/* Use Cases Section */}
       <UseCasesSection />
 
       {/* Pricing Section */}
-      <section id="pricing" style={{ maxWidth: 1140, margin: '0 auto', padding: '4rem 1.5rem 6rem', textAlign: 'center' }}>
-        <div className="badge-social-dark" style={{ marginBottom: '1rem' }}>
+      <section id="pricing" className="bg-dot-pattern" style={{ maxWidth: 1140, margin: '0 auto', padding: '4rem 1.5rem 6rem', textAlign: 'center', borderRadius: 28 }}>
+        <div className="badge-social-dark" style={{ marginBottom: '1rem', background: '#ffffff' }}>
           <Sparkles size={14} color="#2563eb" />
           <span>Transparent Pricing</span>
         </div>
@@ -454,21 +491,8 @@ export default function HomePage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-              }}
-            >
-              <Cpu size={16} strokeWidth={2.5} />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>Aeon AI PR Reviewer</span>
+            <PullPilotLogo size={28} />
+            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>PullPilot AI PR Reviewer</span>
           </div>
 
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.88rem' }}>

@@ -21,7 +21,7 @@ const TESTIMONIALS: Testimonial[] = [
     stars: 5,
     highlight: 'Saved us from an auth timing attack on week 1',
     comment:
-      'Aeon caught an HMAC comparison timing vulnerability in our auth proxy that two senior engineers completely missed during manual review. It literally paid for itself 100x on the first day.',
+      'PullPilot caught an HMAC comparison timing vulnerability in our auth proxy that two senior engineers completely missed during manual review. It literally paid for itself 100x on the first day.',
   },
   {
     name: 'Marcus Vance',
@@ -31,7 +31,7 @@ const TESTIMONIALS: Testimonial[] = [
     stars: 5,
     highlight: 'Like having a 24/7 staff engineer reviewing my code',
     comment:
-      'As a solo founder, shipping without a second set of eyes used to terrify me. Aeon catches my async leaks and missing null checks instantly before I push to production.',
+      'As a solo founder, shipping without a second set of eyes used to terrify me. PullPilot catches my async leaks and missing null checks instantly before I push to production.',
   },
   {
     name: 'David Kim',
@@ -58,7 +58,7 @@ export function TestimonialsSection() {
           Loved by Engineering Teams Worldwide
         </h2>
         <p style={{ color: '#64748b', fontSize: '1.05rem', maxWidth: 600, margin: '0 auto' }}>
-          See how teams use Aeon to ship higher quality code with zero review friction.
+          See how teams use PullPilot to ship higher quality code with zero review friction.
         </p>
       </div>
 

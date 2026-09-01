@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Cpu, ArrowLeft, CheckCircle2, ShieldCheck, Zap, Sparkles, ExternalLink, GitBranch } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, Sparkles, ExternalLink, GitBranch } from 'lucide-react';
+import { PullPilotLogo } from '../../components/PullPilotLogo';
 import { BACKEND_URL } from '../../lib/api';
 
 export default function PricingPage() {
@@ -13,23 +14,10 @@ export default function PricingPage() {
       {/* Floating Pill Nav Header */}
       <header className="nav-pill-wrapper">
         <nav className="nav-pill-container" style={{ position: 'relative' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-              }}
-            >
-              <Cpu size={16} strokeWidth={2.5} />
-            </div>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f172a' }}>
-              aeon.ai
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
+            <PullPilotLogo size={28} />
+            <span style={{ fontSize: '0.84rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f172a' }}>
+              pullpilot.ai
             </span>
           </Link>
 

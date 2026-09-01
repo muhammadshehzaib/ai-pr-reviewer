@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Cpu, ArrowLeft, HelpCircle, Mail, MessageSquare, BookOpen, ExternalLink } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Mail, MessageSquare, BookOpen, ExternalLink } from 'lucide-react';
+import { PullPilotLogo } from '../../components/PullPilotLogo';
 
 const FAQS = [
   {
-    q: 'How does Aeon review my pull requests?',
-    a: 'When you open or update a PR, GitHub sends a webhook event to Aeon. Our backend analyzes the diff, applies your custom .aipr.yml rules, and posts inline suggestions directly to the modified lines of code on GitHub.',
+    q: 'How does PullPilot review my pull requests?',
+    a: 'When you open or update a PR, GitHub sends a webhook event to PullPilot. Our backend analyzes the diff, applies your custom .aipr.yml rules, and posts inline suggestions directly to the modified lines of code on GitHub.',
   },
   {
     q: 'Is my proprietary code stored or used to train AI models?',
@@ -36,23 +37,10 @@ export default function SupportPage() {
       {/* Floating Header */}
       <header className="nav-pill-wrapper">
         <nav className="nav-pill-container" style={{ position: 'relative' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-              }}
-            >
-              <Cpu size={16} strokeWidth={2.5} />
-            </div>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f172a' }}>
-              aeon.ai
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
+            <PullPilotLogo size={28} />
+            <span style={{ fontSize: '0.84rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0f172a' }}>
+              pullpilot.ai
             </span>
           </Link>
           <Link href="/" className="btn-secondary-pill" style={{ fontSize: '0.84rem', padding: '0.45rem 1rem' }}>
@@ -69,7 +57,7 @@ export default function SupportPage() {
 
         <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#0f172a' }}>Support Center</h1>
         <p style={{ color: '#64748b', fontSize: '1rem', marginBottom: '3rem' }}>
-          Need assistance or have questions about Aeon? We are here to help.
+          Need assistance or have questions about PullPilot? We are here to help.
         </p>
 
         {/* Contact Channels */}

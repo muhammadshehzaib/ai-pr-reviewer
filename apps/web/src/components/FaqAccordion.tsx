@@ -11,8 +11,8 @@ interface Faq {
 
 const FAQS: Faq[] = [
   {
-    q: 'How does Aeon review pull requests?',
-    a: 'When you open or update a PR, GitHub sends a secure webhook to Aeon. Our backend analyzes the AST and changed diff lines, evaluates your .aipr.yml rules, and posts actionable inline comments with one-click patches directly on the modified lines in GitHub.',
+    q: 'How does PullPilot review pull requests?',
+    a: 'When you open or update a PR, GitHub sends a secure webhook to PullPilot. Our backend analyzes the AST and changed diff lines, evaluates your .aipr.yml rules, and posts actionable inline comments with one-click patches directly on the modified lines in GitHub.',
   },
   {
     q: 'Is my proprietary code stored or used to train AI models?',
@@ -55,7 +55,7 @@ export function FaqAccordion() {
           Frequently Asked Questions
         </h2>
         <p style={{ color: '#64748b', fontSize: '1.05rem', maxWidth: 540, margin: '0 auto' }}>
-          Everything you need to know about Aeon AI PR Reviewer and GitHub App integration.
+          Everything you need to know about PullPilot AI PR Reviewer and GitHub App integration.
         </p>
       </div>
 

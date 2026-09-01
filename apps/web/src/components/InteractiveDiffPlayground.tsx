@@ -14,6 +14,7 @@ import {
   ArrowRight,
   GitPullRequest,
   Check,
+  Scan,
 } from 'lucide-react';
 
 interface Preset {
@@ -114,6 +115,7 @@ export function InteractiveDiffPlayground() {
   const [activeTab, setActiveTab] = useState<string>('security');
   const [isFixed, setIsFixed] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [hoveredLine, setHoveredLine] = useState<number | null>(null);
 
   const currentPreset = PRESETS.find((p) => p.id === activeTab) || PRESETS[0];
 
@@ -121,7 +123,7 @@ export function InteractiveDiffPlayground() {
     setIsAnalyzing(true);
     setActiveTab(id);
     setIsFixed(false);
-    setTimeout(() => setIsAnalyzing(false), 300);
+    setTimeout(() => setIsAnalyzing(false), 500);
   };
 
   const toggleFix = () => {
@@ -134,13 +136,13 @@ export function InteractiveDiffPlayground() {
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
         <div className="badge-social-dark" style={{ marginBottom: '1rem' }}>
           <Sparkles size={14} color="#2563eb" />
-          <span>Interactive Live Reviewer</span>
+          <span>Aceternity-Style Live Inspector</span>
         </div>
         <h2 style={{ fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', marginBottom: '0.75rem' }}>
           Experience Inline AI Reviews in Real-Time
         </h2>
         <p style={{ color: '#64748b', fontSize: '1.05rem', maxWidth: 640, margin: '0 auto' }}>
-          Watch how Aeon scans pull request diffs, detects critical architectural and security flaws, and suggests drop-in fixes.
+          Watch how PullPilot scans pull request diffs, detects critical architectural and security flaws, and suggests drop-in fixes.
         </p>
       </div>
 
@@ -186,7 +188,7 @@ export function InteractiveDiffPlayground() {
 
         <button
           onClick={toggleFix}
-          className="btn-primary-pill"
+          className="btn-primary-pill btn-shimmer"
           style={{
             fontSize: '0.84rem',
             padding: '0.45rem 1.1rem',
@@ -205,8 +207,11 @@ export function InteractiveDiffPlayground() {
         </button>
       </div>
 
-      {/* Terminal / Code Diff Card */}
-      <div className="diff-box">
+      {/* Terminal / Code Diff Card with Aceternity laser beam and dot background */}
+      <div className="diff-box" style={{ position: 'relative' }}>
+        {/* Laser scan beam when active */}
+        {isAnalyzing && <div className="diff-laser-beam" />}
+
         {/* Diff Top Bar */}
         <div className="diff-bar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -231,50 +236,72 @@ export function InteractiveDiffPlayground() {
                 fontWeight: 700,
                 color: '#60a5fa',
                 background: 'rgba(59, 130, 246, 0.15)',
-                padding: '2px 8px',
+                padding: '3px 10px',
                 borderRadius: 9999,
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '6px',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
               }}
             >
-              <Cpu size={12} /> Aeon Bot v2.4 Active
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6' }} className="pulse-indicator" />
+              <span>PullPilot Bot Active</span>
             </span>
           </div>
         </div>
 
         {/* Code Lines Body */}
-        <div style={{ padding: '0.75rem 0' }}>
+        <div style={{ padding: '0.75rem 0', position: 'relative' }}>
           {isAnalyzing ? (
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+            <div style={{ padding: '3.5rem 2rem', textAlign: 'center', color: '#94a3b8' }}>
               <RefreshCw size={24} className="spin" style={{ margin: '0 auto 1rem', color: '#3b82f6' }} />
-              <p className="mono" style={{ fontSize: '0.85rem' }}>
-                Aeon AI analyzing diff AST and security rules...
+              <p className="mono" style={{ fontSize: '0.86rem', color: '#cbd5e1' }}>
+                PullPilot AST engine parsing tokens &amp; semantic security tree...
               </p>
             </div>
           ) : (
             <>
-              {/* Display code lines */}
-              {(isFixed ? currentPreset.codeLinesAfter : currentPreset.codeLinesBefore).map((line, idx) => (
-                <div
-                  key={idx}
-                  className={`diff-code-row ${
-                    line.type === 'add' ? 'diff-code-add' : line.type === 'del' ? 'diff-code-del' : ''
-                  }`}
-                >
-                  <span className="diff-code-num">{line.num}</span>
-                  <span style={{ color: line.type === 'normal' ? '#cbd5e1' : undefined }}>{line.text}</span>
-                </div>
-              ))}
+              {/* Display code lines with line hover state */}
+              {(isFixed ? currentPreset.codeLinesAfter : currentPreset.codeLinesBefore).map((line, idx) => {
+                const isHovered = hoveredLine === idx;
+                return (
+                  <div
+                    key={idx}
+                    onMouseEnter={() => setHoveredLine(idx)}
+                    onMouseLeave={() => setHoveredLine(null)}
+                    className={`diff-code-row ${
+                      line.type === 'add' ? 'diff-code-add' : line.type === 'del' ? 'diff-code-del' : ''
+                    }`}
+                    style={{
+                      background: isHovered
+                        ? line.type === 'add'
+                          ? 'rgba(16, 185, 129, 0.22)'
+                          : line.type === 'del'
+                          ? 'rgba(239, 68, 68, 0.22)'
+                          : 'rgba(255, 255, 255, 0.05)'
+                        : undefined,
+                      transition: 'background 0.1s ease',
+                      cursor: 'default',
+                    }}
+                  >
+                    <span className="diff-code-num">{line.num}</span>
+                    <span style={{ color: line.type === 'normal' ? '#cbd5e1' : undefined }}>{line.text}</span>
+                  </div>
+                );
+              })}
 
-              {/* Inline Bot Comment */}
+              {/* Inline Bot Comment with Aceternity glow */}
               <AnimatePresence>
                 {!isFixed && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
                     className="diff-comment-bubble"
+                    style={{
+                      boxShadow: '0 10px 30px -5px rgba(59, 130, 246, 0.2)',
+                    }}
                   >
                     <div
                       style={{
@@ -299,14 +326,17 @@ export function InteractiveDiffPlayground() {
                         >
                           <Cpu size={12} />
                         </div>
-                        <strong style={{ color: '#ffffff', fontSize: '0.86rem' }}>aeon-bot[bot]</strong>
+                        <strong style={{ color: '#ffffff', fontSize: '0.86rem' }}>pullpilot-bot[bot]</strong>
                         <span
                           style={{
                             fontSize: '0.68rem',
                             fontWeight: 700,
                             padding: '1px 6px',
                             borderRadius: 4,
-                            background: currentPreset.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                            background:
+                              currentPreset.severity === 'CRITICAL'
+                                ? 'rgba(239, 68, 68, 0.2)'
+                                : 'rgba(245, 158, 11, 0.2)',
                             color: currentPreset.severity === 'CRITICAL' ? '#f87171' : '#fbbf24',
                           }}
                         >
@@ -346,6 +376,7 @@ export function InteractiveDiffPlayground() {
                           padding: '2px 8px',
                           borderRadius: 4,
                           background: 'rgba(59, 130, 246, 0.15)',
+                          cursor: 'pointer',
                         }}
                       >
                         Apply <ArrowRight size={12} />

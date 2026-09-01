@@ -100,7 +100,7 @@ export function UseCasesSection() {
           Built for High-Velocity Engineering
         </h2>
         <p style={{ color: '#64748b', fontSize: '1.05rem', maxWidth: 600, margin: '0 auto' }}>
-          Whether you are a solo indie hacker or managing hundreds of repositories, Aeon accelerates your delivery.
+          Whether you are a solo indie hacker or managing hundreds of repositories, PullPilot accelerates your delivery.
         </p>
       </div>
 

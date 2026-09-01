@@ -15,8 +15,17 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aeon — AI Code Reviewer, Flawless PR Reviews by Default",
+  title: "PullPilot — AI PR Reviewer | Beautiful Code by Default",
   description: "Automated AI code review on every pull request. Catch timing attacks, N+1 query bottlenecks, and memory leaks with instant inline GitHub suggestions.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -26,6 +35,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+      </head>
       <body>{children}</body>
     </html>
   );

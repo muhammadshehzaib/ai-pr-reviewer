@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, Cpu, Key, GitBranch, LogOut, History } from 'lucide-react';
+import { Activity, Key, GitBranch, LogOut, History } from 'lucide-react';
 import { api } from '../lib/api';
 import { AuthUser } from '../lib/useAuth';
+import { PullPilotLogo } from './PullPilotLogo';
 
 interface SidebarProps {
   user: AuthUser | null;
@@ -44,12 +45,12 @@ export function Sidebar({ user, isConnected }: SidebarProps) {
           padding: '0 0.75rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.6rem',
+          gap: '0.65rem',
         }}
       >
-        <Cpu size={18} strokeWidth={2.25} />
-        <span style={{ fontWeight: 600, fontSize: '0.95rem', letterSpacing: '-0.02em' }}>
-          Aeon
+        <PullPilotLogo size={24} />
+        <span style={{ fontWeight: 700, fontSize: '0.95rem', letterSpacing: '-0.02em', color: '#0f172a' }}>
+          PullPilot
         </span>
       </div>
 
