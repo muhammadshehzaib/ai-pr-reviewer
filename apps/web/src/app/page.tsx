@@ -22,6 +22,7 @@ import { Navbar } from '../components/Navbar';
 import { MarqueeShowcase } from '../components/MarqueeShowcase';
 import { InteractiveDiffPlayground } from '../components/InteractiveDiffPlayground';
 import { BentoFeatures } from '../components/BentoFeatures';
+import { ComparisonSection } from '../components/ComparisonSection';
 import { UseCasesSection } from '../components/UseCasesSection';
 import { TestimonialsSection } from '../components/TestimonialsSection';
 import { FaqAccordion } from '../components/FaqAccordion';
@@ -253,6 +254,9 @@ export default function HomePage() {
 
       {/* "Why PullPilot?" Bento Grid */}
       <BentoFeatures />
+
+      {/* Competitor Comparison Section (CodeRabbit, Copilot PR) */}
+      <ComparisonSection />
 
       {/* Use Cases Section */}
       <UseCasesSection />

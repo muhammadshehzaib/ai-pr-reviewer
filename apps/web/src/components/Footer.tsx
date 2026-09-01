@@ -193,11 +193,11 @@ export function Footer() {
           <div>
             <h4 className="footer-col-title">Review Modes</h4>
             <ul className="footer-links-list">
-              <li><a href="#why-pullpilot">Claude 3.7 Sonnet</a></li>
-              <li><a href="#why-pullpilot">GPT-4.5 Preview</a></li>
-              <li><a href="#why-pullpilot">Gemini 2.5 Pro</a></li>
-              <li><a href="#why-pullpilot">Grok 3 Beta</a></li>
-              <li><a href="#why-pullpilot">DeepSeek R1</a></li>
+              <li><a href="#why-pullpilot">ChatGPT 5.6</a></li>
+              <li><a href="#why-pullpilot">Claude 5 Sonnet</a></li>
+              <li><a href="#why-pullpilot">Gemini 3.0 Pro</a></li>
+              <li><a href="#why-pullpilot">Grok 4 Reasoning</a></li>
+              <li><a href="#why-pullpilot">Claude 5 Opus</a></li>
             </ul>
           </div>
 

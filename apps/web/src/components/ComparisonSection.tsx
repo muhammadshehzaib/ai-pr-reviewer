@@ -26,7 +26,7 @@ interface CompetitorComparison {
 
 const COMPARISON_DATA: CompetitorComparison[] = [
   {
-    feature: 'Multi-Model Freedom (Claude 3.7, GPT-4.5, Gemini 2.5)',
+    feature: 'Multi-Model Freedom (Claude 5, ChatGPT 5.6, Gemini 3.0, Grok 4)',
     category: 'AI Engine',
     pullpilot: { supported: true, detail: 'Choose any model or BYOK per repo' },
     coderabbit: { supported: false, detail: 'Vendor-locked model stack' },

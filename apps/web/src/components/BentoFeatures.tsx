@@ -27,17 +27,17 @@ interface ModelInfo {
 }
 
 const MODELS: ModelInfo[] = [
-  { name: 'Claude 3.7 Sonnet', provider: 'Anthropic', latency: '380ms', tag: 'Recommended' },
-  { name: 'GPT-4.5 Preview', provider: 'OpenAI', latency: '450ms', tag: 'Deep Audit' },
-  { name: 'Gemini 2.5 Pro', provider: 'Google AI', latency: '320ms', tag: 'High Speed' },
-  { name: 'Grok 3 Beta', provider: 'xAI', latency: '410ms', tag: 'Reasoning' },
-  { name: 'DeepSeek R1', provider: 'DeepSeek', latency: '490ms', tag: 'Open Weights' },
-  { name: 'Claude 3.5 Haiku', provider: 'Anthropic', latency: '210ms', tag: 'Fast Tier' },
+  { name: 'ChatGPT 5.6', provider: 'OpenAI', latency: '360ms', tag: 'Next-Gen' },
+  { name: 'Claude 5 Sonnet', provider: 'Anthropic', latency: '340ms', tag: 'Recommended' },
+  { name: 'Gemini 3.0 Pro', provider: 'Google AI', latency: '290ms', tag: 'High Speed' },
+  { name: 'Grok 4 Reasoning', provider: 'xAI', latency: '380ms', tag: 'Reasoning' },
+  { name: 'DeepSeek R2', provider: 'DeepSeek', latency: '420ms', tag: 'Open Weights' },
+  { name: 'Claude 5 Opus', provider: 'Anthropic', latency: '410ms', tag: 'Deep Audit' },
 ];
 
 export function BentoFeatures() {
   // State for Card 1: Selected model
-  const [selectedModel, setSelectedModel] = useState<string>('Claude 3.7 Sonnet');
+  const [selectedModel, setSelectedModel] = useState<string>('ChatGPT 5.6');
 
   // State for Card 2: Cipher scrambling
   const [isEncrypted, setIsEncrypted] = useState(true);
@@ -183,7 +183,7 @@ export function BentoFeatures() {
               Multi-Model AI Engine
             </h3>
             <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: 1.6 }}>
-              Click any model above to switch. Choose Claude 3.7 Sonnet for deep security AST analysis, GPT-4.5 for refactoring, or Gemini 2.5 Pro for lightning execution.
+              Click any model above to switch. Choose Claude 5 Sonnet for deep security AST analysis, ChatGPT 5.6 for complex refactoring, or Gemini 3.0 Pro for lightning execution.
             </p>
           </div>
         </div>

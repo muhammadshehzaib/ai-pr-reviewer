@@ -66,6 +66,9 @@ export function Navbar({ user }: NavbarProps) {
             <a href="#why-pullpilot" className="nav-link-item">
               Why PullPilot
             </a>
+            <a href="#compare" className="nav-link-item">
+              Compare
+            </a>
             <a href="#use-cases" className="nav-link-item">
               Use Cases
             </a>
@@ -186,6 +189,14 @@ export function Navbar({ user }: NavbarProps) {
               style={{ fontSize: '1.05rem', padding: '0.6rem 0.5rem' }}
             >
               Why PullPilot
+            </a>
+            <a
+              href="#compare"
+              onClick={() => setMobileMenuOpen(false)}
+              className="nav-link-item"
+              style={{ fontSize: '1.05rem', padding: '0.6rem 0.5rem' }}
+            >
+              Compare
             </a>
             <a
               href="#use-cases"
