@@ -8,32 +8,50 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header className="landing-nav">
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <Cpu size={20} strokeWidth={2.25} color="var(--accent)" />
-          <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>Aeon</span>
-        </Link>
-        <Link href="/" className="btn-secondary" style={{ fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <ArrowLeft size={14} /> Back to Home
-        </Link>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
+      {/* Floating Header */}
+      <header className="nav-pill-wrapper">
+        <nav className="nav-pill-container" style={{ position: 'relative' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+              }}
+            >
+              <Cpu size={16} strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f172a' }}>
+              aeon.ai
+            </span>
+          </Link>
+          <Link href="/" className="btn-secondary-pill" style={{ fontSize: '0.84rem', padding: '0.45rem 1rem' }}>
+            <ArrowLeft size={14} /> Back to Home
+          </Link>
+        </nav>
       </header>
 
       <main className="legal-container">
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)', marginBottom: '1rem' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#2563eb', marginBottom: '1rem' }}>
           <FileText size={18} />
-          <span className="section-label" style={{ color: 'var(--accent)' }}>Terms & Conditions</span>
+          <span className="section-label" style={{ color: '#2563eb' }}>Terms & Conditions</span>
         </div>
 
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Terms of Service</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2.5rem' }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#0f172a' }}>Terms of Service</h1>
+        <p style={{ color: '#64748b', fontSize: '0.92rem', marginBottom: '2.5rem' }}>
           Last updated: September 1, 2026 • Effective immediately
         </p>
 
         <div className="legal-prose">
           <h2>1. Agreement to Terms</h2>
           <p>
-            By installing the Aeon GitHub App or using the website at <code>reviewer.shehzaib.com</code>, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must uninstall the GitHub App and discontinue use of the service.
+            By installing the Aeon GitHub App or using the website, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must uninstall the GitHub App and discontinue use of the service.
           </p>
 
           <h2>2. Software Licensing (GNU AGPL-3.0)</h2>
@@ -59,24 +77,9 @@ export default function TermsPage() {
             <li>Submit malicious code payloads designed to compromise backend review workers.</li>
           </ul>
 
-          <h2>5. Disclaimers & Limitation of Liability</h2>
+          <h2>5. Limitation of Liability</h2>
           <p>
-            Aeon AI PR Reviewer provides automated code suggestions powered by large language models for informational and development aid purposes. <strong>AI-generated code reviews do not guarantee bug-free or completely secure software.</strong>
-          </p>
-          <p>
-            The service is provided on an &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE&rdquo; basis. In no event shall Aeon or its maintainers be liable for any indirect, incidental, special, or consequential damages resulting from the use or inability to use the service.
-          </p>
-
-          <h2>6. Changes to Terms</h2>
-          <p>
-            We reserve the right to modify these terms at any time. Continued use of the service following any updates constitutes acceptance of the modified Terms of Service.
-          </p>
-
-          <h2>7. Contact Information</h2>
-          <p>
-            For questions regarding these Terms, please reach out to:
-            <br />
-            <strong>Email:</strong> <a href="mailto:support@shehzaib.com" style={{ color: 'var(--accent)' }}>support@shehzaib.com</a>
+            Aeon provides automated code review suggestions for informational purposes. While we strive for high accuracy, automated suggestions do not constitute a guarantee against security vulnerabilities or software bugs. You remain solely responsible for validating and testing code prior to production deployment.
           </p>
         </div>
       </main>

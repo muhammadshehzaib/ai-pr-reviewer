@@ -1,10 +1,7 @@
+'use client';
+
 import Link from 'next/link';
 import { Cpu, ArrowLeft, HelpCircle, Mail, MessageSquare, BookOpen, ExternalLink } from 'lucide-react';
-
-export const metadata = {
-  title: 'Support & FAQs — Aeon AI PR Reviewer',
-  description: 'Get help with Aeon GitHub App installation, .aipr.yml configuration, billing, and troubleshooting.',
-};
 
 const FAQS = [
   {
@@ -35,45 +32,63 @@ const FAQS = [
 
 export default function SupportPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header className="landing-nav">
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <Cpu size={20} strokeWidth={2.25} color="var(--accent)" />
-          <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>Aeon</span>
-        </Link>
-        <Link href="/" className="btn-secondary" style={{ fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <ArrowLeft size={14} /> Back to Home
-        </Link>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
+      {/* Floating Header */}
+      <header className="nav-pill-wrapper">
+        <nav className="nav-pill-container" style={{ position: 'relative' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+              }}
+            >
+              <Cpu size={16} strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f172a' }}>
+              aeon.ai
+            </span>
+          </Link>
+          <Link href="/" className="btn-secondary-pill" style={{ fontSize: '0.84rem', padding: '0.45rem 1rem' }}>
+            <ArrowLeft size={14} /> Back to Home
+          </Link>
+        </nav>
       </header>
 
       <main className="legal-container">
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)', marginBottom: '1rem' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#2563eb', marginBottom: '1rem' }}>
           <HelpCircle size={18} />
-          <span className="section-label" style={{ color: 'var(--accent)' }}>Help & Documentation</span>
+          <span className="section-label" style={{ color: '#2563eb' }}>Help & Documentation</span>
         </div>
 
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Support Center</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '3rem' }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#0f172a' }}>Support Center</h1>
+        <p style={{ color: '#64748b', fontSize: '1rem', marginBottom: '3rem' }}>
           Need assistance or have questions about Aeon? We are here to help.
         </p>
 
         {/* Contact Channels */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '4rem' }}>
           <div className="glass-card">
-            <Mail size={20} color="var(--accent)" style={{ marginBottom: '0.75rem' }} />
+            <Mail size={22} color="#2563eb" style={{ marginBottom: '0.75rem' }} />
             <h3 className="card-title" style={{ marginBottom: '0.25rem' }}>Email Support</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+            <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1rem' }}>
               Direct email support with our engineering team.
             </p>
-            <a href="mailto:support@shehzaib.com" className="btn-secondary" style={{ fontSize: '0.8rem', display: 'inline-block' }}>
+            <a href="mailto:support@shehzaib.com" className="btn-secondary" style={{ fontSize: '0.82rem', display: 'inline-block' }}>
               support@shehzaib.com
             </a>
           </div>
 
           <div className="glass-card">
-            <MessageSquare size={20} color="var(--accent)" style={{ marginBottom: '0.75rem' }} />
+            <MessageSquare size={22} color="#2563eb" style={{ marginBottom: '0.75rem' }} />
             <h3 className="card-title" style={{ marginBottom: '0.25rem' }}>GitHub Issues</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+            <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1rem' }}>
               Report bugs or request features on GitHub.
             </p>
             <a
@@ -81,16 +96,16 @@ export default function SupportPage() {
               target="_blank"
               rel="noreferrer"
               className="btn-secondary"
-              style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              style={{ fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
               Open an Issue <ExternalLink size={12} />
             </a>
           </div>
 
           <div className="glass-card">
-            <BookOpen size={20} color="var(--accent)" style={{ marginBottom: '0.75rem' }} />
+            <BookOpen size={22} color="#2563eb" style={{ marginBottom: '0.75rem' }} />
             <h3 className="card-title" style={{ marginBottom: '0.25rem' }}>Repository Guide</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+            <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1rem' }}>
               Configuration recipes and sample .aipr.yml.
             </p>
             <a
@@ -98,7 +113,7 @@ export default function SupportPage() {
               target="_blank"
               rel="noreferrer"
               className="btn-secondary"
-              style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              style={{ fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
               Read Docs <ExternalLink size={12} />
             </a>
@@ -107,14 +122,14 @@ export default function SupportPage() {
 
         {/* FAQs */}
         <div>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '1.5rem' }}>Frequently Asked Questions</h2>
+          <h2 style={{ fontSize: '1.75rem', marginBottom: '1.5rem', color: '#0f172a' }}>Frequently Asked Questions</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {FAQS.map((faq, idx) => (
               <div key={idx} className="glass-card" style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.5rem', color: '#0f172a' }}>
                   {faq.q}
                 </h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', whiteSpace: 'pre-line', lineHeight: 1.6 }}>
+                <p style={{ color: '#64748b', fontSize: '0.92rem', whiteSpace: 'pre-line', lineHeight: 1.6 }}>
                   {faq.a}
                 </p>
               </div>

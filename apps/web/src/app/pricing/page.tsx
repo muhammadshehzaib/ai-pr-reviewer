@@ -1,106 +1,180 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { Cpu, ArrowLeft, CheckCircle2, ShieldCheck, Zap, Sparkles } from 'lucide-react';
+import { Cpu, ArrowLeft, CheckCircle2, ShieldCheck, Zap, Sparkles, ExternalLink, GitBranch } from 'lucide-react';
 import { BACKEND_URL } from '../../lib/api';
 
-export const metadata = {
-  title: 'Pricing — Aeon AI PR Reviewer',
-  description: 'Simple, transparent pricing for Aeon AI PR Reviewer. Free forever for open-source with affordable Indie and Team tiers.',
-};
-
 export default function PricingPage() {
+  const [annual, setAnnual] = useState(false);
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header className="landing-nav">
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <Cpu size={20} strokeWidth={2.25} color="var(--accent)" />
-          <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>Aeon</span>
-        </Link>
-        <Link href="/" className="btn-secondary" style={{ fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <ArrowLeft size={14} /> Back to Home
-        </Link>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
+      {/* Floating Pill Nav Header */}
+      <header className="nav-pill-wrapper">
+        <nav className="nav-pill-container" style={{ position: 'relative' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+              }}
+            >
+              <Cpu size={16} strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f172a' }}>
+              aeon.ai
+            </span>
+          </Link>
+
+          <Link href="/" className="btn-secondary-pill" style={{ fontSize: '0.84rem', padding: '0.45rem 1rem' }}>
+            <ArrowLeft size={14} /> Back to Home
+          </Link>
+        </nav>
       </header>
 
-      <main style={{ maxWidth: 1040, margin: '0 auto', padding: '4rem 1.5rem 6rem', textAlign: 'center' }}>
-        <div className="badge-pill">
-          <Sparkles size={14} />
+      <main style={{ maxWidth: 1140, margin: '0 auto', padding: '7rem 1.5rem 6rem', textAlign: 'center' }}>
+        <div className="badge-social-dark" style={{ marginBottom: '1rem' }}>
+          <Sparkles size={14} color="#2563eb" />
           <span>GitHub Marketplace Billing</span>
         </div>
 
-        <h1 style={{ fontSize: '2.75rem', marginBottom: '0.75rem' }}>
+        <h1 style={{ fontSize: 'clamp(2.25rem, 4vw, 3.25rem)', marginBottom: '0.75rem', color: '#0f172a' }}>
           Predictable Pricing for Developers & Teams
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: 580, margin: '0 auto 3rem' }}>
+        <p style={{ color: '#64748b', fontSize: '1.05rem', maxWidth: 600, margin: '0 auto 2.5rem' }}>
           Start free on your open-source repositories and upgrade whenever your private review volume scales.
         </p>
 
-        <div className="pricing-grid">
+        {/* Toggle */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', marginBottom: '3.5rem' }}>
+          <div className="pill-switch-container">
+            <button
+              onClick={() => setAnnual(false)}
+              className={`pill-switch-btn ${!annual ? 'pill-switch-active' : ''}`}
+            >
+              Monthly Billing
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={`pill-switch-btn ${annual ? 'pill-switch-active' : ''}`}
+            >
+              Annual Billing <span style={{ color: '#10b981', fontWeight: 700 }}>(Save 20%)</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Cards */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
+            gap: '1.75rem',
+            alignItems: 'stretch',
+          }}
+        >
           {/* Free */}
-          <div className="pricing-card">
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Free Plan</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-              For open-source projects and solo developers.
+          <div className="pricing-card-v2">
+            <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: '#0f172a' }}>Free Plan</h3>
+            <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1.75rem', minHeight: '2.6rem' }}>
+              For open-source projects and solo builders.
             </p>
-            <div style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>
-              $0 <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ forever</span>
+            <div style={{ fontSize: '2.75rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.75rem' }}>
+              $0 <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 400 }}>/ forever</span>
             </div>
 
-            <a href={`${BACKEND_URL}/api/auth/github`} className="btn-secondary" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <a href={`${BACKEND_URL}/api/auth/github`} className="btn-secondary-pill" style={{ width: '100%', marginBottom: '2rem' }}>
               Start for Free
             </a>
 
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> Unlimited Public Repositories</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> 50 Private Reviews / month</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> .aipr.yml Configuration</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> Bring Your Own AI Key (Vault)</li>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.88rem', color: '#475569' }}>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#10b981" /> Unlimited Public Repositories</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#10b981" /> 50 Private Reviews / month</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#10b981" /> .aipr.yml Configuration</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#10b981" /> Bring Your Own AI Key (Vault)</li>
             </ul>
           </div>
 
-          {/* Indie */}
-          <div className="pricing-card pricing-card-featured">
-            <div style={{ position: 'absolute', top: -12, right: 20, background: 'var(--accent)', color: '#fff', fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '9999px' }}>
+          {/* Indie (Featured) */}
+          <div className="pricing-card-v2 pricing-card-featured-v2">
+            <div
+              style={{
+                position: 'absolute',
+                top: -14,
+                right: 24,
+                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
+                color: '#ffffff',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '0.25rem 0.85rem',
+                borderRadius: 9999,
+                boxShadow: '0 4px 12px rgba(18, 17, 255, 0.4)',
+                letterSpacing: '0.04em',
+              }}
+            >
               MOST POPULAR
             </div>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Indie Plan</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+
+            <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: '#0f172a' }}>Indie Plan</h3>
+            <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1.75rem', minHeight: '2.6rem' }}>
               For professional solo devs shipping private code daily.
             </p>
-            <div style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>
-              $6 <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ month</span>
+
+            <div style={{ fontSize: '2.75rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.75rem' }}>
+              {annual ? '$5' : '$6'} <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 400 }}>/ month</span>
             </div>
 
-            <a href="https://github.com/marketplace/ai-pr-reviewer" target="_blank" rel="noreferrer" className="btn-primary" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              Subscribe on GitHub
+            <a
+              href="https://github.com/marketplace/ai-pr-reviewer"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-primary-pill"
+              style={{ width: '100%', marginBottom: '2rem' }}
+            >
+              Subscribe on GitHub <ExternalLink size={14} />
             </a>
 
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--accent)" /> <strong>Unlimited</strong> Private Reviews</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--accent)" /> Unlimited Public Reviews</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--accent)" /> Priority Background Processing</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--accent)" /> Multi-Model AI Engine</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--accent)" /> Email & GitHub Support</li>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.88rem', color: '#334155' }}>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#2563eb" /> <strong>Unlimited</strong> Private Reviews</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#2563eb" /> Unlimited Public Reviews</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#2563eb" /> Priority BullMQ Queue</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#2563eb" /> Multi-Model AI Engine</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#2563eb" /> Email & GitHub Support</li>
             </ul>
           </div>
 
           {/* Team */}
-          <div className="pricing-card">
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Team Plan</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+          <div className="pricing-card-v2">
+            <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: '#0f172a' }}>Team Plan</h3>
+            <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1.75rem', minHeight: '2.6rem' }}>
               For organizations with multiple engineers and repositories.
             </p>
-            <div style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>
-              $12 <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ user / mo</span>
+
+            <div style={{ fontSize: '2.75rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.75rem' }}>
+              {annual ? '$10' : '$12'} <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 400 }}>/ user / mo</span>
             </div>
 
-            <a href="https://github.com/marketplace/ai-pr-reviewer" target="_blank" rel="noreferrer" className="btn-secondary" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              Upgrade Organization
+            <a
+              href="https://github.com/marketplace/ai-pr-reviewer"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary-pill"
+              style={{ width: '100%', marginBottom: '2rem' }}
+            >
+              Upgrade Organization <ExternalLink size={14} />
             </a>
 
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> Everything in Indie Plan</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> Org-Wide Installation</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> Shared Invoicing & Seat Pooling</li>
-              <li style={{ display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> Dedicated Review Queue Fleet</li>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.88rem', color: '#475569' }}>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#10b981" /> Everything in Indie Plan</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#10b981" /> Org-Wide Installation</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#10b981" /> Shared Invoicing & Seat Pooling</li>
+              <li style={{ display: 'flex', gap: '0.6rem' }}><CheckCircle2 size={17} color="#10b981" /> Dedicated Review Queue Fleet</li>
             </ul>
           </div>
         </div>

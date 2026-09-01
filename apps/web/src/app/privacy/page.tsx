@@ -3,76 +3,89 @@ import { Cpu, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export const metadata = {
   title: 'Privacy Policy — Aeon AI PR Reviewer',
-  description: 'Learn how Aeon handles your repository code, API keys, and privacy with zero AI training on user code.',
+  description: 'How Aeon AI PR Reviewer protects your code, handles webhooks, and ensures zero AI model training.',
 };
 
 export default function PrivacyPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header className="landing-nav">
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <Cpu size={20} strokeWidth={2.25} color="var(--accent)" />
-          <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>Aeon</span>
-        </Link>
-        <Link href="/" className="btn-secondary" style={{ fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <ArrowLeft size={14} /> Back to Home
-        </Link>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff' }}>
+      {/* Floating Header */}
+      <header className="nav-pill-wrapper">
+        <nav className="nav-pill-container" style={{ position: 'relative' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                background: 'linear-gradient(135deg, #007fff 0%, #1211ff 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+              }}
+            >
+              <Cpu size={16} strokeWidth={2.5} />
+            </div>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0f172a' }}>
+              aeon.ai
+            </span>
+          </Link>
+          <Link href="/" className="btn-secondary-pill" style={{ fontSize: '0.84rem', padding: '0.45rem 1rem' }}>
+            <ArrowLeft size={14} /> Back to Home
+          </Link>
+        </nav>
       </header>
 
       <main className="legal-container">
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)', marginBottom: '1rem' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#10b981', marginBottom: '1rem' }}>
           <ShieldCheck size={18} />
-          <span className="section-label" style={{ color: 'var(--accent)' }}>Privacy & Data Governance</span>
+          <span className="section-label" style={{ color: '#10b981' }}>Data Privacy & Trust</span>
         </div>
 
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Privacy Policy</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2.5rem' }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#0f172a' }}>Privacy Policy</h1>
+        <p style={{ color: '#64748b', fontSize: '0.92rem', marginBottom: '2.5rem' }}>
           Last updated: September 1, 2026 • Effective immediately
         </p>
 
         <div className="legal-prose">
-          <h2>1. Core Commitment: Zero AI Model Training</h2>
+          <h2>1. Zero AI Model Training Guarantee</h2>
           <p>
-            At Aeon, we treat your source code as strictly confidential. <strong>Your source code, diffs, pull request metadata, and repository contents are NEVER used to train, retrain, or fine-tune public or proprietary AI models.</strong>
-          </p>
-          <p>
-            Code diffs are processed strictly in RAM during review execution and are purged immediately after the review comments are posted to your GitHub pull request.
+            We adhere to a strict <strong>zero-training policy</strong>. Your proprietary code, pull request diffs, commits, and repository metadata are <strong>never</strong> used to train, fine-tune, or improve public or private AI foundation models.
           </p>
 
-          <h2>2. Information We Collect</h2>
-          <p>To provide automated code reviews and manage your GitHub App installation, we collect:</p>
-          <ul>
-            <li><strong>GitHub Account Information:</strong> GitHub User ID, username, email address, and avatar URL provided via OAuth authorization.</li>
-            <li><strong>Repository Metadata:</strong> Repository IDs, full names, and public/private status of repositories you explicitly grant access to.</li>
-            <li><strong>Usage Metrics:</strong> Monthly counts of processed pull requests to enforce billing quotas.</li>
-            <li><strong>Encrypted API Keys (Optional):</strong> If you bring your own AI provider keys, they are encrypted at rest with AES-256-GCM and scrypt before storage.</li>
-          </ul>
-
-          <h2>3. Security Architecture & Encryption</h2>
+          <h2>2. Code Handling & In-Memory Execution</h2>
           <p>
-            We adhere to rigorous security standards to protect your credentials and data:
+            When a GitHub webhook triggers a review job:
           </p>
           <ul>
-            <li><strong>AES-256-GCM Encryption:</strong> All sensitive API keys in the Vault are encrypted with uniquely salted keys.</li>
-            <li><strong>Short-Lived Installation Tokens:</strong> GitHub App tokens are generated on-demand with a maximum lifetime of 60 minutes.</li>
-            <li><strong>HTTPS/TLS 1.3:</strong> All communications between GitHub, our API servers, and AI providers are encrypted in transit.</li>
+            <li>Code diffs are fetched securely over TLS directly from the GitHub API using temporary installation access tokens.</li>
+            <li>Diff content is held strictly in volatile worker memory (RAM) during parsing and analysis.</li>
+            <li>Once analysis completes and findings are posted to GitHub, diff buffers are immediately released and purged from memory.</li>
+            <li>We do not write your source code files to persistent disk storage or databases.</li>
           </ul>
 
-          <h2>4. Third-Party AI Sub-Processors</h2>
+          <h2>3. Encrypted API Key Vault</h2>
           <p>
-            When a code review is requested, code diffs are transmitted securely to enterprise AI inference APIs (e.g. Google Gemini, Anthropic Claude, OpenAI, or xAI) strictly for inference. All sub-processors adhere to commercial zero-data-retention APIs where customer data is not retained for training.
+            If you choose to provide custom API keys (e.g. for OpenAI, Anthropic Claude, or Google Gemini), your keys are encrypted at rest using <strong>AES-256-GCM</strong> with unique per-record initialization vectors and scrypt key derivation. Plaintext keys only exist in worker memory for the milliseconds required to complete the API request.
           </p>
 
-          <h2>5. Data Retention & Deletion</h2>
+          <h2>4. Data Collected & Stored</h2>
+          <p>We collect and store only the minimal operational metadata required to provide the service:</p>
+          <ul>
+            <li><strong>Account Info:</strong> Your GitHub user ID, username, and avatar URL provided via GitHub OAuth.</li>
+            <li><strong>Installation Data:</strong> Connected repository IDs and names authorized by your GitHub App installation.</li>
+            <li><strong>Audit Logs:</strong> Timestamps, status (e.g. completed/failed), and high-level finding summaries (file path, line number, issue description) displayed on your dashboard.</li>
+          </ul>
+
+          <h2>5. Third-Party Service Providers</h2>
           <p>
-            You can revoke access to Aeon at any time by uninstalling the GitHub App from your GitHub account or disconnecting individual repositories. Upon account deletion, all associated repository records, encrypted keys, and job history are permanently purged from our databases.
+            Depending on your configured provider, code diff snippets are sent via secure TLS to the designated AI provider (Anthropic, OpenAI, or Google AI) under enterprise API data protection terms that prohibit training on API data.
           </p>
 
           <h2>6. Contact Us</h2>
           <p>
-            If you have questions regarding this Privacy Policy or your data, please contact our data protection team at:
-            <br />
-            <strong>Email:</strong> <a href="mailto:support@shehzaib.com" style={{ color: 'var(--accent)' }}>support@shehzaib.com</a>
+            If you have questions about this privacy policy or our data security practices, please contact us at <a href="mailto:privacy@shehzaib.com" style={{ color: '#2563eb', textDecoration: 'underline' }}>privacy@shehzaib.com</a>.
           </p>
         </div>
       </main>
