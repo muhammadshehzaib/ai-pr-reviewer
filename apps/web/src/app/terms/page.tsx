@@ -3,7 +3,7 @@ import { ArrowLeft, FileText } from 'lucide-react';
 import { PullPilotLogo } from '../../components/PullPilotLogo';
 
 export const metadata = {
-  title: 'Terms of Service — PullPilot AI PR Reviewer',
+  title: 'Terms of Service | PullPilot AI PR Reviewer',
   description: 'Terms and conditions governing the use of PullPilot AI PR Reviewer service and GitHub App.',
 };
 

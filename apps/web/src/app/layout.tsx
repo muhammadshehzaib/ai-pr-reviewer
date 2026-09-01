@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PullPilot — AI PR Reviewer | Beautiful Code by Default",
+  title: "PullPilot | AI PR Reviewer | Beautiful Code by Default",
   description: "Automated AI code review on every pull request. Catch timing attacks, N+1 query bottlenecks, and memory leaks with instant inline GitHub suggestions.",
   icons: {
     icon: [

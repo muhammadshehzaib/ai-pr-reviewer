@@ -26,6 +26,7 @@ import { UseCasesSection } from '../components/UseCasesSection';
 import { TestimonialsSection } from '../components/TestimonialsSection';
 import { FaqAccordion } from '../components/FaqAccordion';
 import { PullPilotLogo } from '../components/PullPilotLogo';
+import { Footer } from '../components/Footer';
 
 export default function HomePage() {
   const { user } = useAuth(false);
@@ -287,15 +288,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 3 Pricing Cards */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
-            gap: '1.75rem',
-            alignItems: 'stretch',
-          }}
-        >
+        {/* 3 Pricing Cards in 1 Row */}
+        <div className="pricing-grid-3col">
           {/* Free Tier */}
           <div className="pricing-card-v2">
             <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: '#0f172a' }}>Free Plan</h3>
@@ -478,43 +472,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer">
-        <div
-          style={{
-            maxWidth: 1140,
-            margin: '0 auto',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '1.5rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <PullPilotLogo size={28} />
-            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>PullPilot AI PR Reviewer</span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.88rem' }}>
-            <Link href="/pricing" style={{ color: '#64748b' }}>Pricing</Link>
-            <Link href="/privacy" style={{ color: '#64748b' }}>Privacy Policy</Link>
-            <Link href="/terms" style={{ color: '#64748b' }}>Terms of Service</Link>
-            <Link href="/support" style={{ color: '#64748b' }}>Support & FAQ</Link>
-            <a
-              href="https://github.com/muhammadshehzaib/ai-pr-reviewer"
-              target="_blank"
-              rel="noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#64748b' }}
-            >
-              GitHub <ExternalLink size={12} />
-            </a>
-          </div>
-        </div>
-
-        <div style={{ maxWidth: 1140, margin: '2rem auto 0', textAlign: 'center', fontSize: '0.82rem', color: '#94a3b8' }}>
-          Licensed under GNU AGPL-3.0. Built for developers worldwide.
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

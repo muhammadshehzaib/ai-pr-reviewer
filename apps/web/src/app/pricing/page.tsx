@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, Sparkles, ExternalLink, GitBranch } from 'lucide-react';
 import { PullPilotLogo } from '../../components/PullPilotLogo';
+import { Footer } from '../../components/Footer';
 import { BACKEND_URL } from '../../lib/api';
 
 export default function PricingPage() {
@@ -58,15 +59,8 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Cards */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
-            gap: '1.75rem',
-            alignItems: 'stretch',
-          }}
-        >
+        {/* Cards in 1 Row */}
+        <div className="pricing-grid-3col">
           {/* Free */}
           <div className="pricing-card-v2">
             <h3 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: '#0f172a' }}>Free Plan</h3>
@@ -167,6 +161,9 @@ export default function PricingPage() {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

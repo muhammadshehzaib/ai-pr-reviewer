@@ -190,6 +190,108 @@
   box-shadow: 0 20px 35px -10px rgba(37, 99, 235, 0.12), 0 0 0 1px rgba(37, 99, 235, 0.2);
 }
 
+/* =========================================================================
+   Pricing 3-Column 1-Row Layout & Card Styling
+   ========================================================================= */
+
+.pricing-grid-3col {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.pricing-card-v2 {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2.25rem 1.75rem;
+  box-shadow: var(--shadow-bento);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pricing-card-v2:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08);
+}
+
+.pricing-card-featured-v2 {
+  border: 2px solid #2563eb;
+  box-shadow: 0 16px 36px -8px rgba(37, 99, 235, 0.2), 0 0 0 1px rgba(37, 99, 235, 0.15);
+}
+
+@media (max-width: 960px) {
+  .pricing-grid-3col {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+  }
+}
+
+/* =========================================================================
+   Mega Directory Footer Styling (videocaptions.ai signature)
+   ========================================================================= */
+
+.footer-col-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1.15rem;
+}
+
+.footer-links-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  font-size: 0.84rem;
+  color: #64748b;
+}
+
+.footer-links-list a {
+  color: #64748b;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-block;
+}
+
+.footer-links-list a:hover {
+  color: #2563eb;
+  transform: translateX(4px);
+}
+
+.footer-social-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.15s ease;
+}
+
+.footer-social-icon:hover {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.footer-bottom-link {
+  transition: color 0.15s ease;
+}
+
+.footer-bottom-link:hover {
+  color: #2563eb !important;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;

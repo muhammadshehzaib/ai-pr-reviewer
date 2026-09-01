@@ -3,7 +3,7 @@ import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { PullPilotLogo } from '../../components/PullPilotLogo';
 
 export const metadata = {
-  title: 'Privacy Policy — PullPilot AI PR Reviewer',
+  title: 'Privacy Policy | PullPilot AI PR Reviewer',
   description: 'How PullPilot AI PR Reviewer protects your code, handles webhooks, and ensures zero AI model training.',
 };
 
